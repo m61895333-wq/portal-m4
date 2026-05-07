@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { addTopicTag, createDraft, deletePost, removeTopicTag, updatePost } from "@/lib/portal-cms";
+import { addTopicTag, createQueuedPost, deletePost, removeTopicTag, updatePost, setAutonomyStatus, listPosts } from "@/lib/portal-cms";
 import { signInAdmin, signOutAdmin } from "@/lib/admin-auth";
+import { generateEditorialDraft } from "@/lib/article-generator";
 import type { PortalPost, PostStatus } from "@/lib/types";
 
 function revalidatePortal() {
@@ -29,15 +30,28 @@ export async function logoutAction() {
   redirect("/admin");
 }
 
-export async function createDraftAction(formData: FormData) {
-  await createDraft({
-    sourceUrl: String(formData.get("sourceUrl") ?? ""),
-    topic: String(formData.get("topic") ?? ""),
-    approach: String(formData.get("approach") ?? ""),
-    scheduledAt: String(formData.get("scheduledAt") ?? "") || undefined
-  });
-  revalidatePortal();
+export async function createSingleDraftAction(formData: FormData) {
+  const topic = formData.get("topic") as string;
+  const sourceUrl = formData.get("sourceUrl") as string;
+  const approach = formData.get("approach") as string;
+  const scheduledAt = formData.get("scheduledAt") as string;
+  const index = formData.get("index") as string;
+
+  const finalTopic = topic || sourceUrl || "Tendências de Mercado";
+
+  try {
+    const result = await createQueuedPost({
+      topic: finalTopic,
+      scheduledAt
+    });
+    
+    return { success: true, id: result.id };
+  } catch (err: any) {
+    console.error(`[ESTEIRA] Falha ao enfileirar artigo ${index}:`, err);
+    return { success: false, error: err.message || "Erro ao conectar com a fila da VPS." };
+  }
 }
+
 
 export async function savePostAction(formData: FormData) {
   const id = String(formData.get("id"));
@@ -88,16 +102,59 @@ export async function deletePostAction(formData: FormData) {
 export async function remakePostAction(formData: FormData) {
   const id = String(formData.get("id"));
   const topic = String(formData.get("title") ?? "tema editorial");
-  const draft = await createDraft({ topic, approach: "Refazer conteudo com profundidade e tom premium" });
-  await updatePost(id, {
-    content: draft.content,
-    excerpt: draft.excerpt,
-    imageUrl: draft.imageUrl,
-    tags: draft.tags,
-    status: "review",
-    reviewerNotes: "Conteudo refeito automaticamente. Revisar antes de aprovar."
+  
+  // REGRA DE OURO: Geramos o conteudo sem salvar no DB para evitar duplicatas e timeouts
+  const draft = await generateEditorialDraft({ 
+    topic, 
+    approach: "Refazer este artigo com profundidade total, tom premium e sem emojis." 
   });
-  await deletePost(draft.id);
+  
+  if (draft) {
+    await updatePost(id, {
+      content: draft.content,
+      excerpt: draft.excerpt,
+      imageUrl: draft.imageUrl,
+      status: "review",
+      reviewerNotes: "Conteudo refeito com IA (Turbo Mode). Revisado para PT-BR (Sem Emojis)."
+    });
+  }
+  
+  revalidatePortal();
+}
+
+export async function remakeImageAction(formData: FormData) {
+  const id = String(formData.get("id"));
+  const categorySlug = String(formData.get("categorySlug") ?? "tecnologia");
+  
+  // Array de palavras-chave baseadas no nicho M4
+  const keywords = ["technology", "business", "finance", "data", "ai", "market", "office", "innovation"];
+  const randomKeyword = keywords[Math.floor(Math.random() * keywords.length)];
+  
+  // URL generica do Unsplash com seed aleatoria para forçar nova imagem
+  const newImageUrl = `https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1400&q=85&sig=${Date.now()}`.replace('1611974789855-9c2a0a7236a3', 'random'); 
+  // Na verdade vamos usar a API do Unsplash Source ou params parecidos
+  const actualUrl = `https://source.unsplash.com/1400x800/?${randomKeyword}&sig=${Date.now()}`;
+  
+  await updatePost(id, {
+    imageUrl: actualUrl
+  });
+  
+  revalidatePortal();
+}
+
+/**
+ * ACAO: Agente de Autonomia Total
+ * REGRA: Este agente monitora o impacto e publica sozinho nos horarios de pico.
+ */
+export async function toggleAutonomyAction(formData: FormData) {
+  const currentStatus = formData.get("currentStatus") === "true";
+  const nextStatus = !currentStatus;
+  const count = Number(formData.get("dailyCount") ?? 5);
+  
+  // REGRA SOBERANA: Registro de troca de estado
+  console.log(`[AUTONOMIA] Agente mudando de ${currentStatus} para ${nextStatus}. Meta: ${count}`);
+  
+  await setAutonomyStatus(nextStatus, count);
   revalidatePortal();
 }
 

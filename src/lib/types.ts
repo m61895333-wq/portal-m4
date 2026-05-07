@@ -1,4 +1,4 @@
-export type PostStatus = "draft" | "review" | "approved" | "rejected" | "published";
+export type PostStatus = "draft" | "review" | "approved" | "rejected" | "published" | "queued" | "generating";
 
 export type PortalPost = {
   id: string;
@@ -26,7 +26,12 @@ export type TopicMetric = {
 
 export type PerformanceSummary = {
   totalViews: number;
+  absoluteTotal: number;
+  previousViews: number;
+  trendPercentage: number;
+  dailyData: number[];
   mostReadPosts: Array<{ title: string; slug: string; views: number }>;
+  recentPosts: Array<{ title: string; slug: string }>;
   mostReadTopics: TopicMetric[];
   leastReadTopics: TopicMetric[];
 };

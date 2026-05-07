@@ -6,6 +6,24 @@ import styles from "./portal.module.css";
 
 export default async function HomePage() {
   const posts = await listPublicPosts();
+  
+  if (!posts || posts.length === 0) {
+    return (
+      <div className="mainLayout">
+        <Sidebar />
+        <main className="contentShell">
+          <Header />
+          <section className="container" style={{ paddingTop: 100, textAlign: 'center' }}>
+             <h1 style={{ fontFamily: 'var(--font-serif)' }}>Bem-vindo ao Portal M4</h1>
+             <p style={{ color: 'var(--muted)', marginTop: 20 }}>Estamos preparando os ultimos detalhes editoriais. Volte em instantes!</p>
+             <Link href="/admin" className="button" style={{ marginTop: 40 }}>Acessar Editorial</Link>
+          </section>
+          <Footer />
+        </main>
+      </div>
+    );
+  }
+
   const hero = posts[0];
   const recent = posts.slice(0, 6);
 
@@ -53,35 +71,14 @@ export default async function HomePage() {
           <div className="adSlot" id="ad-home-hero-bottom">Espaco Reservado para Anuncio</div>
         </div>
 
-        <section className="container" id="categorias">
-          <div className={styles.sectionHeader}>
-            <div>
-              <span className={styles.eyebrow}>Editorias estrategicas</span>
-              <h2 style={{ fontFamily: 'var(--font-serif)' }}>Categorias do Portal M4</h2>
+        <div className="container" style={{ paddingTop: 100, paddingBottom: 100 }}>
+          <section>
+            <div className={styles.sectionHeader}>
+              <div>
+                <span className={styles.eyebrow}>Explorar Conteudo</span>
+                <h2>Artigos Recentes</h2>
+              </div>
             </div>
-          </div>
-          <div className={styles.categoryGrid}>
-            {categories.map((category) => (
-              <Link key={category.slug} className={`${styles.categoryCard} card`} href={`/categoria/${category.slug}`}>
-                <img src={category.image} alt={`Imagem da categoria ${category.name}`} />
-                <strong style={{ color: category.accent }}>{category.name}</strong>
-                <p>{category.description}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        <div className="container">
-          <div className="adSlot" id="ad-home-middle">Espaco Reservado para Anuncio</div>
-        </div>
-
-        <section className="container">
-          <div className={styles.sectionHeader}>
-            <div>
-              <span className={styles.eyebrow}>Ultimas publicacoes</span>
-              <h2 style={{ fontFamily: 'var(--font-serif)' }}>Artigos recentes</h2>
-            </div>
-          </div>
           <div className={styles.postGrid}>
             {recent.map((post) => (
               <Link key={post.id} href={`/artigo/${post.slug}`} className={`${styles.postCard} card`}>
@@ -93,9 +90,10 @@ export default async function HomePage() {
             ))}
           </div>
         </section>
+      </div>
         
-        <Footer />
-      </main>
-    </div>
+      <Footer />
+    </main>
+  </div>
   );
 }

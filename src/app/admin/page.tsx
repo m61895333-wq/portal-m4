@@ -1,22 +1,24 @@
 import Link from "next/link";
 import { categories } from "@/lib/categories";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
-import { getPerformance, listPosts, listTopicTags } from "@/lib/portal-cms";
-import { hasSupabaseConfig } from "@/lib/supabase";
+import { getAutonomyStatus, getPerformance, listPosts, listTopicTags } from "@/lib/portal-cms";
 import { Header } from "../site-shell";
 import styles from "../portal.module.css";
 import {
   addTagAction,
-  createDraftAction,
   deletePostAction,
   loginFormAction,
   logoutAction,
   remakePostAction,
+  remakeImageAction,
   removeTagAction,
   savePostAction,
   setStatusAction,
-  toggleActiveAction
+  toggleActiveAction,
+  toggleAutonomyAction
 } from "./actions";
+
+import { BatchCreator } from "./batch-creator";
 
 type Props = {
   searchParams: Promise<{ status?: string; period?: "week" | "month"; erro?: string }>;
@@ -56,241 +58,279 @@ export default async function AdminPage({ searchParams }: Props) {
 
   const status = params.status && params.status !== "all" ? (params.status as never) : "all";
   const period = params.period ?? "week";
-  const [posts, tags, performance] = await Promise.all([listPosts(status), listTopicTags(), getPerformance(period)]);
+  const [allPosts, tags, performance, autonomy] = await Promise.all([
+    listPosts("all"), 
+    listTopicTags(), 
+    getPerformance(period),
+    getAutonomyStatus()
+  ]);
+
+  const filteredPosts = status === "all" ? allPosts : allPosts.filter(p => p.status === status);
+
+  const sortedPosts = [...filteredPosts].sort((a, b) => {
+    const statusOrder = { "review": 0, "draft": 1, "approved": 2, "published": 3, "rejected": 4 };
+    const orderA = statusOrder[a.status as keyof typeof statusOrder] ?? 99;
+    const orderB = statusOrder[b.status as keyof typeof statusOrder] ?? 99;
+    
+    if (orderA !== orderB) return orderA - orderB;
+    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  });
 
   return (
-    <div className="mainLayout">
-      <Sidebar />
-      <main className="contentShell">
-        <Header />
-        <div className={`container ${styles.adminLayout}`}>
-          <aside className={`${styles.sidebar} card`}>
-            <span className={styles.eyebrow}>Editorial</span>
-            <h2>Filtros</h2>
-            {["all", "approved", "rejected", "review", "published", "draft"].map((item) => (
-              <Link className={`buttonSecondary ${styles.filterButton}`} href={`/admin?status=${item}`} key={item}>
-                {item === "all" ? "Todos" : item}
-              </Link>
-            ))}
+    <main className="containerFull admin-inter" style={{ paddingTop: 40, paddingBottom: 80 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 48, borderBottom: '1px solid var(--line)', paddingBottom: 24 }}>
+        <div className="brand">
+          <img src="/portal-m4-brand-logo.png" alt="Logo" style={{ width: 44, height: 44 }} />
+          <span style={{ fontSize: '1.2rem', letterSpacing: '0.05em' }}>PAINEL EDITORIAL M4</span>
+        </div>
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <Link href="/" className="buttonSecondary" style={{ fontSize: '0.8rem' }}>Ver Portal</Link>
+          <form action={logoutAction}>
+            <button className="buttonSecondary" type="submit" style={{ fontSize: '0.8rem', color: 'var(--danger)' }}>Sair</button>
+          </form>
+        </div>
+      </div>
+
+      {/* DASHBOARD DE ANALISE E CONTROLE (WAR ROOM) */}
+      <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', marginBottom: 40 }}>
+        <div className="card" style={{ padding: 24, background: 'linear-gradient(135deg, rgba(32, 217, 255, 0.05), rgba(37, 99, 235, 0.05))', border: '1px solid rgba(32, 217, 255, 0.1)' }}>
+          <span className={styles.eyebrow}>Audiencia Total (Historico)</span>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: 900, margin: '8px 0' }}>{performance.absoluteTotal.toLocaleString('pt-BR')}</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ 
+              padding: '4px 10px', 
+              borderRadius: '20px', 
+              fontSize: '0.75rem', 
+              fontWeight: 800,
+              background: performance.trendPercentage >= 0 ? 'rgba(53, 242, 185, 0.1)' : 'rgba(251, 113, 133, 0.1)',
+              color: performance.trendPercentage >= 0 ? 'var(--green)' : 'var(--danger)'
+            }}>
+              {performance.trendPercentage >= 0 ? '↑' : '↓'} {Math.abs(performance.trendPercentage)}%
+            </span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>crescimento no periodo</span>
+          </div>
+        </div>
+
+        <div className="card" style={{ padding: 24 }}>
+          <span className={styles.eyebrow}>Impacto por Editoria</span>
+          <div style={{ marginTop: 12 }}>
+            {performance.mostReadTopics && performance.mostReadTopics.length > 0 ? performance.mostReadTopics.slice(0, 3).map((topic, idx) => (
+              <div key={topic.topic} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{topic.topic.toUpperCase().replaceAll("-", " ")}</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--cyan)', fontWeight: 800 }}>{topic.views} views</span>
+              </div>
+            )) : (
+              <div style={{ padding: '20px 0', textAlign: 'center' }}>
+                <p style={{ fontSize: '0.75rem', color: 'var(--muted)', margin: 0 }}>Aguardando primeiros dados<br/>de trafego real...</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="card" style={{ padding: 24 }}>
+          <span className={styles.eyebrow}>Saude da Rede</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 15, marginTop: 15 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Posts no Ar</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>{allPosts.filter(p => p.status === 'published').length}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Tags Ativas</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>{tags.length}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Taxa de Engajamento</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--green)' }}>ALTA</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* AGENTE DE AUTONOMIA TOTAL (TOTAL AUTONOMY) */}
+      <section className="card" style={{ padding: 24, marginBottom: 32, border: `1px solid ${autonomy.active ? 'var(--green)' : 'var(--muted)'}`, background: 'linear-gradient(135deg, rgba(53, 242, 185, 0.03), rgba(53, 242, 185, 0.08))' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', alignItems: 'center' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+               <span style={{ width: 10, height: 10, borderRadius: '50%', background: autonomy.active ? 'var(--green)' : 'var(--muted)', boxShadow: autonomy.active ? '0 0 10px var(--green)' : 'none' }}></span>
+               <span className={styles.eyebrow} style={{ color: autonomy.active ? 'var(--green)' : 'var(--muted)' }}>Agente de Autonomia Total (BETA)</span>
+            </div>
+            <h2 style={{ margin: '8px 0', fontSize: '1.8rem', opacity: autonomy.active ? 1 : 0.6 }}>Inteligencia Autonoma M4</h2>
+            <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Este agente monitora o <b>Impacto por Editoria</b> e publica automaticamente nos horarios de pico.</p>
+          </div>
+          <form action={toggleAutonomyAction} style={{ display: 'flex', gap: '24px', alignItems: 'center', justifyContent: 'flex-end' }}>
+            <input type="hidden" name="currentStatus" value={String(autonomy.active)} />
+            <label className={styles.field} style={{ marginBottom: 0, width: '120px' }}>
+              Posts / Dia
+              <input name="dailyCount" type="number" defaultValue={String(autonomy.dailyCount)} min="1" max="20" />
+            </label>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: 800, marginBottom: 8, color: 'var(--muted)' }}>STATUS DO AGENTE</span>
+              <button 
+                className="button" 
+                type="submit" 
+                style={{ 
+                  background: autonomy.active ? 'var(--green)' : 'rgba(255,255,255,0.1)', 
+                  color: autonomy.active ? 'black' : 'white', 
+                  fontWeight: 900,
+                  boxShadow: autonomy.active ? '0 0 20px rgba(53, 242, 185, 0.3)' : 'none'
+                }}
+              >
+                {autonomy.active ? 'ATIVO (LIGADO)' : 'INATIVO (DESLIGADO)'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section className="card" style={{ padding: 24, marginBottom: 32, border: '1px solid var(--cyan)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', alignItems: 'center' }}>
+          <div>
+            <span className={styles.eyebrow}>Programacao Editorial</span>
+            <h2 style={{ margin: '8px 0', fontSize: '1.8rem' }}>Meta de Conteudo</h2>
+            <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Defina a quantidade de artigos que a IA deve criar por dia.</p>
+          </div>
+          <BatchCreator />
+          <div style={{ padding: '16px', background: 'rgba(32, 217, 255, 0.05)', borderRadius: '16px', textAlign: 'center' }}>
+            <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--cyan)' }}>{allPosts.filter(p => p.status === 'review').length}</span>
+            <span style={{ display: 'block', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 800 }}>Na fila de aprovacao</span>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.adminLayout} style={{ gridTemplateColumns: '300px 1fr', gap: '32px' }}>
+          <aside className={`${styles.sidebar} card`} style={{ padding: 24, height: 'fit-content' }}>
+            <span className={styles.eyebrow}>Filtros Editorial</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: 16 }}>
+              {["all", "review", "published", "draft", "rejected"].map((item) => (
+                <Link className={`buttonSecondary ${styles.filterButton}`} href={`/admin?status=${item}`} key={item} style={{ background: status === item ? 'rgba(32, 217, 255, 0.15)' : '' }}>
+                  {item === "all" ? "Todos os Posts" : item.toUpperCase()}
+                </Link>
+              ))}
+            </div>
 
             <hr style={{ borderColor: "rgba(125,211,252,.18)", margin: "24px 0" }} />
             <h3>Tags estrategicas</h3>
             <form action={addTagAction} className={styles.quickActions}>
-              <input name="tag" placeholder="nova-tag" style={{ flex: 1, minWidth: 0 }} />
-              <button className="buttonSecondary" type="submit">
-                Adicionar
-              </button>
+              <input name="tag" placeholder="nova-tag" style={{ flex: 1, minWidth: 0, borderRadius: 8, padding: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--line)' }} />
+              <button className="buttonSecondary" type="submit">Add</button>
             </form>
-            {tags.map((tag) => (
-              <form action={removeTagAction} key={tag} className={styles.quickActions}>
-                <input type="hidden" name="tag" value={tag} />
-                <span className={styles.badge}>{tag}</span>
-                <button className="dangerButton" type="submit">
-                  Remover
-                </button>
-              </form>
-            ))}
-            {!tags.length && <p style={{ color: "var(--muted)" }}>Sem tags cadastradas.</p>}
-          </aside>
-
-          <section>
-            <div className={`${styles.adminPanel} card`}>
-              <div className={styles.sectionHeader} style={{ marginTop: 0 }}>
-                <div>
-                  <span className={styles.eyebrow}>Painel de desempenho</span>
-                  <h1>Gestao editorial</h1>
-                  {!hasSupabaseConfig() && (
-                    <p style={{ color: "var(--gold)" }}>
-                      Supabase ainda nao configurado neste ambiente. O site esta usando conteudo de seguranca.
-                    </p>
-                  )}
-                </div>
-                <form action={logoutAction}>
-                  <button className="buttonSecondary" type="submit">
-                    Sair
+            <div style={{ marginTop: 24, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {tags.map((tag) => (
+                <form action={removeTagAction} key={tag}>
+                  <input type="hidden" name="tag" value={tag} />
+                  <button className={styles.badge} type="submit" style={{ cursor: 'pointer', background: 'none' }}>
+                    #{tag} <span style={{ color: 'var(--danger)', marginLeft: 6 }}>×</span>
                   </button>
                 </form>
-              </div>
-
-              <div className={styles.quickActions}>
-                <Link className="buttonSecondary" href="/admin?period=week">
-                  Semana
-                </Link>
-                <Link className="buttonSecondary" href="/admin?period=month">
-                  Mes
-                </Link>
-              </div>
-              <p>Total de visualizacoes no periodo: <strong>{performance.totalViews}</strong></p>
-              <div className={styles.editorGrid}>
-                <div className="card" style={{ padding: 18 }}>
-                  <h3>Artigos mais lidos</h3>
-                  {performance.mostReadPosts.length ? (
-                    performance.mostReadPosts.map((item) => (
-                      <p key={item.slug}>{item.title}: <strong>{item.views}</strong></p>
-                    ))
-                  ) : (
-                    <p>Sem dados suficientes.</p>
-                  )}
-                </div>
-                <div className="card" style={{ padding: 18 }}>
-                  <h3>Assuntos menos lidos</h3>
-                  {performance.leastReadTopics.map((item) => (
-                    <p key={item.topic}>{item.topic}: <strong>{item.views}</strong></p>
-                  ))}
-                </div>
-              </div>
+              ))}
             </div>
+          </aside>
 
-            <div className={`${styles.adminPanel} card`} style={{ marginTop: 18 }}>
-              <span className={styles.eyebrow}>Criar novo post</span>
-              <form action={createDraftAction}>
-                <div className={styles.editorGrid}>
-                  <label className={styles.field}>
-                    Link de referencia
-                    <input name="sourceUrl" placeholder="https://..." />
-                  </label>
-                  <label className={styles.field}>
-                    Assunto
-                    <input name="topic" placeholder="Ex: impacto da IA nos investimentos" />
-                  </label>
-                </div>
-                <label className={styles.field}>
-                  Como deve ser abordado
-                  <textarea name="approach" placeholder="Tom, ponto de vista, publico e detalhes importantes." />
-                </label>
-                <label className={styles.field}>
-                  Data de postagem
-                  <input name="scheduledAt" type="datetime-local" />
-                </label>
-                <button className="button" type="submit">
-                  Criar post para revisao
-                </button>
-              </form>
-            </div>
-
-            {posts.map((post) => (
-              <article className={`${styles.postEditor} card`} key={post.id}>
-                <div className={styles.sectionHeader} style={{ marginTop: 0 }}>
-                  <div>
-                    <span className={styles.badge}>{post.status}</span>
-                    <h2>{post.title}</h2>
-                    <Link href={`/artigo/${post.slug}`} style={{ color: "var(--cyan)" }}>
-                      /artigo/{post.slug}
-                    </Link>
+          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '24px' }}>
+            {sortedPosts.length > 0 ? sortedPosts.map((post) => (
+              <article key={post.id} className="card" style={{ padding: 0, overflow: 'hidden', border: post.status === 'review' ? '1px solid var(--cyan)' : '1px solid var(--line)', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ position: 'relative', height: '220px' }}>
+                  <img src={post.imageUrl || 'https://images.unsplash.com/photo-1611974714658-058f40da23fb?q=80&w=2070&auto=format&fit=crop'} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <div style={{ position: 'absolute', top: 12, right: 12 }}>
+                    <span style={{ 
+                      padding: '4px 12px', 
+                      borderRadius: '20px', 
+                      fontSize: '0.65rem', 
+                      fontWeight: 900, 
+                      textTransform: 'uppercase',
+                      background: post.status === 'review' ? 'var(--cyan)' : 'var(--bg)',
+                      color: post.status === 'review' ? 'black' : 'white',
+                      border: '1px solid var(--cyan)'
+                    }}>
+                      {post.status}
+                    </span>
                   </div>
                 </div>
+                
+                <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <form action={savePostAction} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <input type="hidden" name="id" value={post.id} />
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                      <label className={styles.field} style={{ marginBottom: 0 }}>
+                        <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>SUGESTAO DE DATA</span>
+                        <input 
+                          name="publishedAt" 
+                          type="datetime-local" 
+                          defaultValue={post.publishedAt ? new Date(post.publishedAt).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16)} 
+                          style={{ fontSize: '0.8rem', padding: '8px' }}
+                        />
+                      </label>
+                      <label className={styles.field} style={{ marginBottom: 0 }}>
+                        <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>IMAGEM (URL)</span>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <input name="imageUrl" defaultValue={post.imageUrl} placeholder="URL da imagem" style={{ fontSize: '0.8rem', padding: '8px', flex: 1 }} />
+                          <button 
+                            formAction={remakeImageAction} 
+                            formTarget="_self"
+                            className="buttonSecondary" 
+                            style={{ padding: '8px 12px', fontSize: '0.75rem', whiteSpace: 'nowrap' }}
+                            title="Trocar Imagem Aleatoriamente"
+                          >
+                            Trocar
+                          </button>
+                        </div>
+                      </label>
+                    </div>
 
-                <form action={savePostAction}>
-                  <input type="hidden" name="id" value={post.id} />
-                  <div className={styles.editorGrid}>
-                    <label className={styles.field}>
-                      Titulo
-                      <input name="title" defaultValue={post.title} required />
+                    <label className={styles.field} style={{ marginBottom: 16 }}>
+                      <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>TITULO</span>
+                      <input name="title" defaultValue={post.title} style={{ fontWeight: 800, fontSize: '1rem', padding: '10px' }} />
                     </label>
-                    <label className={styles.field}>
-                      Slug
-                      <input name="slug" defaultValue={post.slug} required />
+
+                    <label className={styles.field} style={{ flex: 1, marginBottom: 16 }}>
+                      <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>CONTEUDO</span>
+                      <textarea name="content" defaultValue={post.content} style={{ minHeight: '150px', fontSize: '0.85rem', lineHeight: '1.6', padding: '10px' }} />
                     </label>
-                    <label className={styles.field}>
-                      Categoria
-                      <select name="category" defaultValue={post.category}>
-                        {categories.map((category) => (
-                          <option key={category.slug} value={category.slug}>
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className={styles.field}>
-                      Status
-                      <select name="status" defaultValue={post.status}>
-                        <option value="draft">draft</option>
-                        <option value="review">review</option>
-                        <option value="approved">approved</option>
-                        <option value="rejected">rejected</option>
-                        <option value="published">published</option>
-                      </select>
-                    </label>
-                    <label className={styles.field}>
-                      Prioridade
-                      <input name="priority" type="number" defaultValue={post.priority} />
-                    </label>
-                    <label className={styles.field}>
-                      Data de postagem
-                      <input name="scheduledAt" type="datetime-local" defaultValue={post.scheduledAt?.slice(0, 16)} />
-                    </label>
-                  </div>
-                  <label className={styles.field}>
-                    Resumo
-                    <input name="excerpt" defaultValue={post.excerpt} />
-                  </label>
-                  <label className={styles.field}>
-                    Imagem realista
-                    <input name="imageUrl" defaultValue={post.imageUrl} />
-                  </label>
-                  <label className={styles.field}>
-                    Tags separadas por virgula
-                    <input name="tags" defaultValue={post.tags.join(", ")} />
-                  </label>
-                  <label className={styles.field}>
-                    Conteudo
-                    <textarea name="content" defaultValue={post.content} />
-                  </label>
-                  <label className={styles.field}>
-                    Observacoes da revisao
-                    <input name="reviewerNotes" defaultValue={post.reviewerNotes ?? ""} />
-                  </label>
-                  <label>
-                    <input name="isActive" type="checkbox" defaultChecked={post.isActive} /> Ativo
-                  </label>
-                  <div className={styles.adminActions}>
-                    <button className="button" type="submit">
-                      Salvar
+
+                    <button className="button" type="submit" style={{ background: 'linear-gradient(135deg, #20d9ff, #3b82f6)', border: 'none', width: '100%', marginBottom: 12 }}>
+                      SALVAR EDICOES
                     </button>
-                  </div>
-                </form>
+                  </form>
 
-                <div className={styles.adminActions}>
-                  {[
-                    ["approved", "Aprovar"],
-                    ["rejected", "Nao aprovar"],
-                    ["published", "Publicar"]
-                  ].map(([nextStatus, label]) => (
-                    <form action={setStatusAction} key={nextStatus}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, paddingTop: 16, borderTop: '1px solid var(--line)' }}>
+                    <form action={setStatusAction}>
                       <input type="hidden" name="id" value={post.id} />
-                      <input type="hidden" name="status" value={nextStatus} />
-                      <button className="buttonSecondary" type="submit">
-                        {label}
+                      <input type="hidden" name="status" value="published" />
+                      <button className="button" type="submit" style={{ width: '100%', background: 'var(--green)', color: 'black', fontWeight: 900, fontSize: '0.75rem', border: 'none' }}>
+                        APROVAR E PUBLICAR
                       </button>
                     </form>
-                  ))}
-                  <form action={toggleActiveAction}>
-                    <input type="hidden" name="id" value={post.id} />
-                    <input type="hidden" name="active" value={String(post.isActive)} />
-                    <button className="buttonSecondary" type="submit">
-                      {post.isActive ? "Desativar" : "Ativar"}
-                    </button>
-                  </form>
-                  <form action={remakePostAction}>
-                    <input type="hidden" name="id" value={post.id} />
-                    <input type="hidden" name="title" value={post.title} />
-                    <button className="buttonSecondary" type="submit">
-                      Refazer conteudo
-                    </button>
-                  </form>
-                  <form action={deletePostAction}>
-                    <input type="hidden" name="id" value={post.id} />
-                    <button className="dangerButton" type="submit">
-                      Excluir post
-                    </button>
-                  </form>
+                    <form action={setStatusAction}>
+                      <input type="hidden" name="id" value={post.id} />
+                      <input type="hidden" name="status" value="rejected" />
+                      <button className="buttonSecondary" type="submit" style={{ width: '100%', color: 'var(--danger)', fontSize: '0.75rem' }}>
+                        REJEITAR
+                      </button>
+                    </form>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                    <form action={remakePostAction} style={{ flex: 1 }}>
+                      <input type="hidden" name="id" value={post.id} />
+                      <input type="hidden" name="title" value={post.title} />
+                      <button className="buttonSecondary" type="submit" style={{ width: '100%', fontSize: '0.65rem' }}>REFAZER COM IA</button>
+                    </form>
+                    <form action={deletePostAction}>
+                      <input type="hidden" name="id" value={post.id} />
+                      <button className="buttonSecondary" type="submit" style={{ color: 'var(--danger)', fontSize: '0.65rem' }}>EXCLUIR</button>
+                    </form>
+                  </div>
                 </div>
               </article>
-            ))}
+            )) : (
+              <div className="card" style={{ padding: 40, textAlign: 'center', gridColumn: '1 / -1' }}>
+                <p>Nenhum post encontrado para este filtro.</p>
+                <Link href="/admin?status=all" className="button">Ver todos os posts</Link>
+              </div>
+            )}
           </section>
-        </div>
-        <Footer />
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

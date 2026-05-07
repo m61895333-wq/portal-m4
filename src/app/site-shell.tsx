@@ -21,11 +21,30 @@ export async function Sidebar() {
             {category.name}
           </Link>
         ))}
+
+        <div style={{ marginTop: '32px' }}>
+          <span className="statsLabel" style={{ marginLeft: '18px', marginBottom: '16px', display: 'block' }}>Em Alta</span>
+          {perf.mostReadPosts.map((post, idx) => (
+            <Link key={post.slug} href={`/artigo/${post.slug}`} className="sidebarLink" style={{ alignItems: 'flex-start', gap: '12px', padding: '10px 18px' }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--cyan)', fontWeight: 900, marginTop: '2px' }}>{(idx + 1).toString().padStart(2, '0')}</span>
+              <span style={{ fontSize: '0.85rem', lineHeight: '1.4', fontWeight: 500 }}>{post.title}</span>
+            </Link>
+          ))}
+        </div>
+
+        <div style={{ marginTop: '32px' }}>
+          <span className="statsLabel" style={{ marginLeft: '18px', marginBottom: '16px', display: 'block' }}>Novidades</span>
+          {perf.recentPosts.map((post) => (
+            <Link key={`rec-${post.slug}`} href={`/artigo/${post.slug}`} className="sidebarLink" style={{ padding: '10px 18px' }}>
+              <span style={{ fontSize: '0.85rem', lineHeight: '1.4', fontWeight: 500 }}>{post.title}</span>
+            </Link>
+          ))}
+        </div>
       </nav>
 
       <div className="sidebarStats">
         <div className="statsCard">
-          <span className="statsValue">{perf.totalViews.toLocaleString('pt-BR')}</span>
+          <span className="statsValue">{perf.absoluteTotal.toLocaleString('pt-BR')}</span>
           <span className="statsLabel">Acessos Totais</span>
         </div>
       </div>
@@ -44,9 +63,6 @@ export async function Header() {
           <Link href="/" className="hideMobile">Home</Link>
           <Link href="/sobre" className="hideMobile">Sobre</Link>
           <Link href="/contato" className="hideMobile">Contato</Link>
-        </div>
-        <div className="menu">
-          <Link href="/admin" className="buttonSecondary" style={{ padding: '8px 16px' }}>Admin</Link>
         </div>
       </nav>
     </header>
@@ -75,8 +91,9 @@ export function Footer() {
         </div>
         <div>
           <strong>Grupo M4</strong>
+          <Link href="https://salex.com.br">Salex AI</Link>
+          <Link href="https://m4games.com.br">M4 Games</Link>
           <Link href="https://grupom4.com">Grupo M4</Link>
-          <Link href="https://portalm4.com.br">Portal M4</Link>
           <Link href="mailto:contato@portalm4.com.br">contato@portalm4.com.br</Link>
         </div>
       </div>
