@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCategory } from "@/lib/categories";
 import { listCategoryPosts } from "@/lib/portal-cms";
-import { Footer, Header } from "../../site-shell";
+import { Footer, Header, Sidebar } from "../../site-shell";
 import styles from "../../portal.module.css";
 
 type Props = {
@@ -28,28 +28,31 @@ export default async function CategoryPage({ params }: Props) {
   const posts = await listCategoryPosts(category.slug);
 
   return (
-    <main className="shell">
-      <Header />
-      <section className="container">
-        <div className={styles.sectionHeader}>
-          <div>
-            <span className={styles.eyebrow}>Categoria</span>
-            <h1>{category.name}</h1>
-            <p>{category.description}</p>
+    <div className="mainLayout">
+      <Sidebar />
+      <main className="contentShell">
+        <Header />
+        <section className="container">
+          <div className={styles.sectionHeader}>
+            <div>
+              <span className={styles.eyebrow}>Categoria</span>
+              <h1>{category.name}</h1>
+              <p>{category.description}</p>
+            </div>
           </div>
-        </div>
-        <div className={styles.postGrid}>
-          {posts.map((post) => (
-            <Link key={post.id} href={`/artigo/${post.slug}`} className={`${styles.postCard} card`}>
-              <img src={post.imageUrl} alt={post.title} />
-              <span>{category.name}</span>
-              <h3>{post.title}</h3>
-              <p>{post.excerpt}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-      <Footer />
-    </main>
+          <div className={styles.postGrid}>
+            {posts.map((post) => (
+              <Link key={post.id} href={`/artigo/${post.slug}`} className={`${styles.postCard} card`}>
+                <img src={post.imageUrl} alt={post.title} />
+                <span>{category.name}</span>
+                <h3>{post.title}</h3>
+                <p>{post.excerpt}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+        <Footer />
+      </main>
+    </div>
   );
 }

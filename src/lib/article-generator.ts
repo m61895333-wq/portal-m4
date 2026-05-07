@@ -1,4 +1,7 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { categories } from "./categories";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 const realisticImages: Record<string, string> = {
   "mercado-financeiro": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1400&q=85",
@@ -29,62 +32,77 @@ function pickCategory(input: string) {
   );
 }
 
-export function generateEditorialDraft(input: {
+export async function generateEditorialDraft(input: {
   topic?: string;
   sourceUrl?: string;
   approach?: string;
   scheduledAt?: string;
 }) {
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
   const baseTopic = input.topic?.trim() || input.sourceUrl?.trim() || "tendencias relevantes para investidores";
   const category = pickCategory(`${baseTopic} ${input.approach ?? ""}`);
-  const cleanTopic = baseTopic.replace(/^https?:\/\//, "").replace(/[/?#].*$/, "").replaceAll("-", " ");
-  const slug = `${slugify(cleanTopic)}-${Date.now()}`;
-  const title = `Analise Especialista: ${cleanTopic}`;
-  const excerpt =
-    "Conteudo profissional com abordagem de especialista para gerar confianca, contexto e decisao com criterio.";
+  
+  console.log(`[Gerador] Iniciando pauta para: ${baseTopic}`);
 
-  const sections = [
-    "Contexto estrategico",
-    "Diagnostico profissional",
-    "Leitura de cenarios",
-    "Dados que merecem atencao",
-    "Impacto para pessoas e empresas",
-    "Riscos e pontos cegos",
-    "Como interpretar os sinais",
-    "Plano pratico de acompanhamento",
-    "Indicadores para monitorar",
-    "Erros comuns e como evitar",
-    "Oportunidades de medio prazo",
-    "Conclusao executiva"
-  ];
+  // 1. Gerar Estrutura (Título, Excerpt e Tópicos)
+  const structurePrompt = `
+    Voce e um Editor-Chefe de um portal premium (Portal M4). 
+    Assunto: ${baseTopic}
+    Abordagem: ${input.approach ?? "Profissional, tecnica e de mercado"}
+    
+    Crie uma estrutura para um artigo epico de mais de 3000 palavras.
+    Retorne EXATAMENTE um JSON no formato:
+    {
+      "title": "Titulo chamativo e profissional",
+      "excerpt": "Resumo persuasivo de 2 frases",
+      "sections": ["Titulo da Secao 1", "Titulo da Secao 2", ..., "Titulo da Secao 12"]
+    }
+    Gere no minimo 12 secoes para garantir profundidade.
+  `;
 
-  const paragraphs = sections
-    .map((section) => {
-      return [
-        `## ${section}`,
-        `Ao analisar ${cleanTopic}, o ponto central e separar opiniao de evidencia. Uma leitura premium precisa considerar contexto, consequencias e prioridades. Isso evita decisoes por impulso e cria uma visao mais confiavel sobre o que realmente pode mudar resultados.`,
-        `Na pratica, o melhor caminho e observar sinais consistentes, comparar cenarios e entender quais variaveis podem alterar a direcao do tema. Essa postura protege o leitor de promessas superficiais e transforma informacao em inteligencia aplicavel.`,
-        `Para quem acompanha ${category.name.toLowerCase()}, o mais importante e construir um processo: definir o que observar, quando revisar e quais limites indicam que a tese precisa ser ajustada. Esse metodo e o que diferencia uma leitura amadora de uma abordagem de especialista.`
-      ].join("\n\n");
-    })
-    .join("\n\n");
+  const structureResult = await model.generateContent(structurePrompt);
+  const structureJson = JSON.parse(structureResult.response.text().replace(/```json|```/g, ""));
+  
+  console.log(`[Gerador] Estrutura criada: ${structureJson.title} com ${structureJson.sections.length} secoes.`);
 
-  const conclusion =
-    "Este artigo deve ser revisado antes da publicacao final. A regra editorial do Portal M4 e manter profundidade, linguagem profissional, imagem realista e foco em utilidade pratica para o leitor.";
+  // 2. Gerar cada secao individualmente para manter a profundidade
+  let fullContent = "";
+  for (let i = 0; i < structureJson.sections.length; i++) {
+    const sectionTitle = structureJson.sections[i];
+    console.log(`[Gerador] Escrevendo secao ${i + 1}/${structureJson.sections.length}: ${sectionTitle}`);
+    
+    const sectionPrompt = `
+      Escreva a secao "${sectionTitle}" para o artigo "${structureJson.title}".
+      Contexto: Este e um artigo premium do Portal M4. O publico e exigente.
+      Foco: ${baseTopic}.
+      
+      Instrucoes:
+      - Use markdown (## para titulo se necessario).
+      - Seja extremamente detalhado, use dados hipoteticos realistas, analises de cenario e exemplos.
+      - Escreva no minimo 300 a 400 palavras SOMENTE para esta secao.
+      - Linguagem profissional e persuasiva.
+    `;
+    
+    const sectionResult = await model.generateContent(sectionPrompt);
+    fullContent += `## ${sectionTitle}\n\n${sectionResult.response.text()}\n\n`;
+  }
+
+  const slug = `${slugify(structureJson.title)}-${Date.now()}`;
 
   return {
     slug,
-    title,
-    excerpt,
-    content: `${paragraphs}\n\n${conclusion}`,
+    title: structureJson.title,
+    excerpt: structureJson.excerpt,
+    content: fullContent,
     imageUrl: realisticImages[category.slug] ?? realisticImages["mercado-financeiro"],
     category: category.slug,
-    tags: [slugify(cleanTopic), category.slug, "portal-m4"].filter(Boolean),
+    tags: [slugify(category.name), "portal-m4", "analise-premium"].filter(Boolean),
     status: "review" as const,
     priority: 50,
     scheduledAt: input.scheduledAt || null,
     publishedAt: null,
-    reviewerNotes: input.sourceUrl ? `Criado a partir do link: ${input.sourceUrl}` : "Criado pelo painel editorial.",
+    reviewerNotes: input.sourceUrl ? `Link: ${input.sourceUrl}` : "IA-Generated Premium Content",
     isActive: true
   };
 }

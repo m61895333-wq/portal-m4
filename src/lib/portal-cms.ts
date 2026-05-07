@@ -135,7 +135,7 @@ export async function listCategoryPosts(category: string) {
 }
 
 export async function createDraft(input: { topic?: string; sourceUrl?: string; approach?: string; scheduledAt?: string }) {
-  const draft = generateEditorialDraft(input);
+  const draft = await generateEditorialDraft(input);
   if (!hasSupabaseConfig()) return { ...fallbackPost, ...draft, id: "local-draft" };
 
   const { data, error } = await getSupabaseAdmin()

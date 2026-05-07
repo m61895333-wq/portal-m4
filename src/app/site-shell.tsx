@@ -1,20 +1,52 @@
 import Link from "next/link";
 import { categories } from "@/lib/categories";
+import { getPerformance } from "@/lib/portal-cms";
+import { MobileMenuTrigger } from "./mobile-nav";
 
-export function Header() {
+export async function Sidebar() {
+  const perf = await getPerformance("month");
+  
+  return (
+    <aside className="sidebar">
+      <Link href="/" className="brand" aria-label="Portal M4">
+        <img src="/portal-m4-brand-logo.png" alt="Logo Portal M4" />
+        <span>Portal M4</span>
+      </Link>
+
+      <nav className="sidebarMenu">
+        <span className="statsLabel" style={{ marginLeft: '18px', marginBottom: '8px', display: 'block' }}>Editorias</span>
+        {categories.map((category) => (
+          <Link key={category.slug} href={`/categoria/${category.slug}`} className="sidebarLink">
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: category.accent }} />
+            {category.name}
+          </Link>
+        ))}
+      </nav>
+
+      <div className="sidebarStats">
+        <div className="statsCard">
+          <span className="statsValue">{perf.totalViews.toLocaleString('pt-BR')}</span>
+          <span className="statsLabel">Acessos Totais</span>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+export async function Header() {
+  const perf = await getPerformance("month");
+
   return (
     <header className="header">
       <nav className="container nav">
-        <Link href="/" className="brand" aria-label="Portal M4">
-          <img src="/portal-m4-brand-logo.png" alt="Logo Portal M4" />
-          <span>Portal M4</span>
-        </Link>
+        <div className="menu" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <MobileMenuTrigger totalViews={perf.totalViews} />
+          <Link href="/" className="hideMobile">Home</Link>
+          <Link href="/sobre" className="hideMobile">Sobre</Link>
+          <Link href="/contato" className="hideMobile">Contato</Link>
+        </div>
         <div className="menu">
-          {categories.slice(0, 5).map((category) => (
-            <Link key={category.slug} href={`/categoria/${category.slug}`}>
-              {category.shortName}
-            </Link>
-          ))}
+          <Link href="/admin" className="buttonSecondary" style={{ padding: '8px 16px' }}>Admin</Link>
         </div>
       </nav>
     </header>
