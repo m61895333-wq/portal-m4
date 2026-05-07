@@ -40,6 +40,7 @@ O objetivo e ter uma esteira editorial com IA: criar pautas e rascunhos, anexar 
   - `portal_posts`
   - `portal_post_views`
   - `portal_topic_tags`
+- Migracao inicial executada: posts antigos do JSON local foram importados para o Supabase novo.
 
 As chaves reais estao configuradas em `.env.local` no ambiente local e nas variaveis de ambiente da Vercel. Nao registrar valores completos neste manual.
 
@@ -81,6 +82,7 @@ As chaves reais estao configuradas em `.env.local` no ambiente local e nas varia
 - O build local passou com `npm run build`.
 - A auditoria de dependencias passou com `0 vulnerabilities` apos override seguro de `postcss`.
 - A Vercel foi ajustada para framework `nextjs`, build `npm run build` e projeto renomeado para `portal-m4`.
+- A URL `https://portal-m4.vercel.app` foi criada como alias temporario publico.
 
 ## Pendencias
 
