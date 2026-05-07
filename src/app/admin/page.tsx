@@ -301,13 +301,23 @@ export default async function AdminPage({ searchParams }: Props) {
                         APROVAR E PUBLICAR
                       </button>
                     </form>
-                    <form action={setStatusAction}>
-                      <input type="hidden" name="id" value={post.id} />
-                      <input type="hidden" name="status" value="rejected" />
-                      <button className="buttonSecondary" type="submit" style={{ width: '100%', color: 'var(--danger)', fontSize: '0.75rem' }}>
-                        REJEITAR
-                      </button>
-                    </form>
+                    {post.status === 'published' ? (
+                      <form action={setStatusAction}>
+                        <input type="hidden" name="id" value={post.id} />
+                        <input type="hidden" name="status" value="draft" />
+                        <button className="button" type="submit" style={{ width: '100%', background: 'var(--orange)', color: 'black', fontWeight: 900, fontSize: '0.75rem', border: 'none' }}>
+                          DESPUBLICAR (RASCUNHO)
+                        </button>
+                      </form>
+                    ) : (
+                      <form action={setStatusAction}>
+                        <input type="hidden" name="id" value={post.id} />
+                        <input type="hidden" name="status" value="rejected" />
+                        <button className="buttonSecondary" type="submit" style={{ width: '100%', color: 'var(--danger)', fontSize: '0.75rem' }}>
+                          REJEITAR
+                        </button>
+                      </form>
+                    )}
                   </div>
 
                   <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
