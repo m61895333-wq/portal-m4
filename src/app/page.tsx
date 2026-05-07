@@ -21,7 +21,9 @@ export default async function HomePage() {
             <div className={styles.heroGrid}>
               <div>
                 <span className={styles.eyebrow}>Portal premium do Grupo M4</span>
-                <h1>Inteligencia para mercado, tecnologia, investimentos e IA.</h1>
+                <h1 style={{ fontFamily: 'var(--font-serif)', lineHeight: 1.1 }}>
+                  Inteligencia para mercado, tecnologia, investimentos e IA.
+                </h1>
                 <p>
                   Analises profundas, linguagem profissional e curadoria editorial para transformar informacao em
                   decisao.
@@ -31,15 +33,15 @@ export default async function HomePage() {
                     Ler artigo principal
                   </Link>
                   <Link className="buttonSecondary" href="#categorias">
-                    Ver categorias
+                    Explorar Conteudo
                   </Link>
                 </div>
               </div>
               <article className={`${styles.featured} card`}>
                 <img src={hero.imageUrl} alt={hero.title} />
                 <div>
-                  <span>{hero.tags[0] ?? "analise"}</span>
-                  <h2>{hero.title}</h2>
+                  <span className="badge">{hero.tags[0] ?? "analise"}</span>
+                  <h2 style={{ fontFamily: 'var(--font-serif)', marginTop: 12 }}>{hero.title}</h2>
                   <p>{hero.excerpt}</p>
                 </div>
               </article>
@@ -47,11 +49,15 @@ export default async function HomePage() {
           </div>
         </section>
 
+        <div className="container">
+          <div className="adSlot" id="ad-home-hero-bottom">Espaco Reservado para Anuncio</div>
+        </div>
+
         <section className="container" id="categorias">
           <div className={styles.sectionHeader}>
             <div>
               <span className={styles.eyebrow}>Editorias estrategicas</span>
-              <h2>Categorias do Portal M4</h2>
+              <h2 style={{ fontFamily: 'var(--font-serif)' }}>Categorias do Portal M4</h2>
             </div>
           </div>
           <div className={styles.categoryGrid}>
@@ -65,19 +71,23 @@ export default async function HomePage() {
           </div>
         </section>
 
+        <div className="container">
+          <div className="adSlot" id="ad-home-middle">Espaco Reservado para Anuncio</div>
+        </div>
+
         <section className="container">
           <div className={styles.sectionHeader}>
             <div>
               <span className={styles.eyebrow}>Ultimas publicacoes</span>
-              <h2>Artigos recentes</h2>
+              <h2 style={{ fontFamily: 'var(--font-serif)' }}>Artigos recentes</h2>
             </div>
           </div>
           <div className={styles.postGrid}>
             {recent.map((post) => (
               <Link key={post.id} href={`/artigo/${post.slug}`} className={`${styles.postCard} card`}>
                 <img src={post.imageUrl} alt={post.title} />
-                <span>{post.category.replaceAll("-", " ")}</span>
-                <h3>{post.title}</h3>
+                <span className="badge" style={{ marginLeft: 22 }}>{post.category.replaceAll("-", " ")}</span>
+                <h3 style={{ fontFamily: 'var(--font-serif)' }}>{post.title}</h3>
                 <p>{post.excerpt}</p>
               </Link>
             ))}

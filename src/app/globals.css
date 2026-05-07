@@ -1,15 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;600;800&display=swap');
+
 :root {
   --bg: #050816;
   --panel: rgba(12, 18, 38, 0.86);
   --panel-strong: #0b1224;
-  --line: rgba(125, 211, 252, 0.22);
+  --line: rgba(125, 211, 252, 0.15);
   --text: #eef6ff;
-  --muted: #9fb0c8;
+  --text-article: #d1d9e6; /* Soft color for reading */
+  --muted: #8a9bb3;
   --cyan: #20d9ff;
   --blue: #2563eb;
   --green: #35f2b9;
   --gold: #f6c453;
   --danger: #fb7185;
+  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Inter', sans-serif;
 }
 
 * {
@@ -355,5 +360,72 @@ select {
   
   .hero p {
     font-size: 1rem;
+  }
+}
+
+/* Premium Article Reading Styles */
+.articleReader {
+  max-width: 720px;
+  margin: 0 auto;
+  line-height: 1.85;
+  font-size: 1.2rem;
+  color: var(--text-article);
+  font-family: var(--font-sans);
+}
+
+.articleReader h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  color: white;
+  margin-bottom: 24px;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+
+.articleReader h2 {
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  color: white;
+  margin: 1.8em 0 0.6em;
+  line-height: 1.2;
+}
+
+.articleReader p {
+  margin-bottom: 1.6em;
+}
+
+/* Ad Slots - Hidden for now */
+.adSlot {
+  display: none; 
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed var(--line);
+  border-radius: 16px;
+  margin: 48px 0;
+  padding: 32px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.adSlotVisible {
+  display: block !important;
+}
+
+.articleLayout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 60px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .articleLayout {
+    grid-template-columns: 1fr;
+  }
+  
+  .articleSidebar {
+    display: none;
   }
 }
