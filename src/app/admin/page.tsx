@@ -200,20 +200,20 @@ export default async function AdminPage({ searchParams }: Props) {
           <form action={toggleAutonomyAction} style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'flex-end' }}>
             <input type="hidden" name="currentStatus" value={String(autonomy.active)} />
             
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-               <label className={styles.field} style={{ marginBottom: 0, width: '120px' }}>
-                  Meta (Posts/Dia)
-                  <input name="dailyCount" type="number" defaultValue={String(autonomy.dailyCount ?? 5)} min="1" max="100" />
+            <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+               <label className={styles.field} style={{ marginBottom: 0, width: '140px' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--muted)', marginBottom: '8px', display: 'block' }}>Meta (Posts/Dia)</span>
+                  <input name="dailyCount" type="number" defaultValue={String(autonomy.dailyCount ?? 5)} min="1" max="100" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', height: '48px' }} />
                </label>
-               <label className={styles.field} style={{ marginBottom: 0, width: '120px' }}>
-                  Hora de Início
-                  <input name="startTime" type="time" defaultValue={autonomy.startTime ?? "08:00"} />
+               <label className={styles.field} style={{ marginBottom: 0, width: '160px' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--muted)', marginBottom: '8px', display: 'block' }}>Hora de Inicio</span>
+                  <input name="startTime" type="time" defaultValue={autonomy.startTime ?? "08:00"} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', height: '48px' }} />
                </label>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-               <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--muted)' }}>DIAS DE OPERAÇÃO</span>
-               <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '12px', marginTop: '10px', width: '100%' }}>
+               <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--muted)', letterSpacing: '0.1em', width: '100%', textAlign: 'right' }}>DIAS DE OPERACAO</span>
+               <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', width: '100%' }}>
                   {[
                     { key: 'seg', label: 'S' },
                     { key: 'ter', label: 'T' },
@@ -223,25 +223,25 @@ export default async function AdminPage({ searchParams }: Props) {
                     { key: 'sab', label: 'S' },
                     { key: 'dom', label: 'D' }
                   ].map((day) => (
-                    <label key={day.key} style={{ cursor: 'pointer' }}>
+                    <label key={day.key} style={{ cursor: 'pointer', position: 'relative' }}>
                       <input 
                         type="checkbox" 
                         name="activeDays" 
                         value={day.key} 
                         defaultChecked={autonomy.activeDays?.includes(day.key) ?? true} 
-                        style={{ display: 'none' }}
+                        style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
                       />
                       <div className="daySelector" style={{ 
-                        width: '32px', 
-                        height: '32px', 
-                        borderRadius: '8px', 
-                        border: '1px solid var(--line)',
+                        width: '36px', 
+                        height: '36px', 
+                        borderRadius: '10px', 
+                        border: '1px solid rgba(255,255,255,0.05)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '0.75rem',
+                        fontSize: '0.8rem',
                         fontWeight: 900,
-                        transition: '0.2s'
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                       }}>
                         {day.label}
                       </div>

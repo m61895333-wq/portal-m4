@@ -473,18 +473,20 @@ select {
 }
 /* Estilo para seletores de dias da semana */
 .daySelector {
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--muted);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .daySelector:hover {
   border-color: var(--cyan);
   color: white;
+  background: rgba(32, 217, 255, 0.1);
 }
 
 input[type="checkbox"]:checked + .daySelector {
   background: var(--cyan);
-  color: black;
+  color: #000;
   border-color: var(--cyan);
-  box-shadow: 0 0 15px rgba(32, 217, 255, 0.3);
+  box-shadow: 0 0 20px rgba(32, 217, 255, 0.6), 0 0 40px rgba(32, 217, 255, 0.2);
+  transform: translateY(-2px);
 }
