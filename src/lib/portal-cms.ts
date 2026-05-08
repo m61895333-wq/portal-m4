@@ -195,15 +195,23 @@ export async function createQueuedPost(input: { topic: string; scheduledAt?: str
   // Criamos um esqueleto do post. O Agente na VPS preencherá o conteúdo e o excerpt.
   const slug = `pauta-${Date.now()}-${input.topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50)}`;
   
+  // Galeria Curada M4 para novos artigos
+  const premiumPhotos = [
+    "photo-1519389950473-47ba0277781c", "photo-1485827404703-89b55fcc595e", 
+    "photo-1460925895917-afdab827c52f", "photo-1590283603385-17ffb3a7f29f",
+    "photo-1677442136019-21780ecad995", "photo-1620712943543-bcc4628c9759"
+  ];
+  const randomPhoto = premiumPhotos[Math.floor(Math.random() * premiumPhotos.length)];
+
   const postData = {
     title: input.topic,
     slug: slug,
     content: "Gerando conteúdo na VPS...",
     excerpt: "Aguardando processamento da IA na VPS...",
-    category: "GERAL", // O Agente pode ajustar isso depois
+    category: "GERAL", 
     status: "queued" as PostStatus,
     priority: 1,
-    imageUrl: `https://source.unsplash.com/featured/?${input.topic.toLowerCase().replace(/[^a-z]+/g, ',')},technology&sig=${Date.now()}`,
+    imageUrl: `https://images.unsplash.com/${randomPhoto}?auto=format&fit=crop&w=1400&q=80`,
     scheduledAt: input.scheduledAt,
     isActive: true
   };

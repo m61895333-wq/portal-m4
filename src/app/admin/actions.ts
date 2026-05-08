@@ -122,26 +122,24 @@ export async function remakePostAction(formData: FormData) {
 
 export async function remakeImageAction(formData: FormData) {
   const id = String(formData.get("id"));
-  const title = String(formData.get("title") ?? "");
-  const category = String(formData.get("categorySlug") ?? "business");
   
-  // Lista de palavras premium baseadas no contexto M4
-  const contextKeywords = ["modern", "professional", "minimalist", "luxury", "technology", "abstract-dark"];
-  const randomContext = contextKeywords[Math.floor(Math.random() * contextKeywords.length)];
-  
-  // Limpar o título para usar como busca
-  const searchTerms = title
-    .toLowerCase()
-    .replace(/[^a-z ]/g, "")
-    .split(" ")
-    .filter(w => w.length > 3)
-    .slice(0, 3)
-    .join(",");
+  // Galeria Curada M4 - Apenas fotos de altíssimo nível (Tech, Finance, AI, Business)
+  const premiumPhotos = [
+    "photo-1519389950473-47ba0277781c", "photo-1485827404703-89b55fcc595e", 
+    "photo-1460925895917-afdab827c52f", "photo-1590283603385-17ffb3a7f29f",
+    "photo-1677442136019-21780ecad995", "photo-1620712943543-bcc4628c9759",
+    "photo-1518770660439-4636190af475", "photo-1550751827-4bd374c3f58b",
+    "photo-1454165205744-3b78555e5572", "photo-1507679799987-c7377ec48696",
+    "photo-1531746790731-6c087fecd65a", "photo-1678382156212-f14013840242",
+    "photo-1526374965328-7f61d4dc18c5", "photo-1551288049-bbbda546697a",
+    "photo-1551434678-e076c223a692", "photo-1516321318423-f06f85e504b3",
+    "photo-1535320903710-d993d3d77d29", "photo-1522071823991-b5ae77c4740e"
+  ];
 
-  const finalQuery = searchTerms ? `${searchTerms},${randomContext}` : `${category},${randomContext}`;
+  const randomPhoto = premiumPhotos[Math.floor(Math.random() * premiumPhotos.length)];
   
-  // URL Dinâmica e Aleatória: Usamos o redirecionador 'featured' com um 'sig' único para forçar uma nova imagem a cada clique
-  const actualUrl = `https://source.unsplash.com/featured/?${finalQuery}&sig=${id.slice(0, 5)}-${Date.now()}`;
+  // Link direto e ultra-estável
+  const actualUrl = `https://images.unsplash.com/${randomPhoto}?auto=format&fit=crop&w=1400&q=80&sig=${Date.now()}`;
   
   await updatePost(id, {
     imageUrl: actualUrl
