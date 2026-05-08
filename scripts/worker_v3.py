@@ -1,27 +1,28 @@
 import time
 import requests
 import json
-import datetime
-from supabase import create_client, Client
+from supabase import create_client
 
-# Configurações de Conexão
-url = 'https://iueoqdwhrnxkgjrqybwo.supabase.co'
-key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1ZW9xZHdocm54a2dqcnF5YndvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODEyODY3MywiZXhwIjoyMDkzNzA0NjczfQ.qFnIR_dWoWQqNkVNISbbYJ4AqBEk-aXnqorwthh4hBI'
-supabase: Client = create_client(url, key)
+# CONFIGURACOES M4
+SUPABASE_URL = "https://iueoqdwhrnxkgjrqybwo.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1ZW9xZHdocm54a2dqcnF5YndvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODEyODY3MywiZXhwIjoyMDkzNzA0NjczfQ.qFnIR_dWoWQqNkVNISbbYJ4AqBEk-aXnqorwthh4hBI"
+OLLAMA_URL = "http://localhost:11434/api/generate"
+MODEL = "llama3:8b-instruct-q4_0"
 
-def generate_with_ollama(prompt):
-    print('--- [FOCO TOTAL] Gerando com Ollama (8GB Power) ---')
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+def generate_content(prompt):
     try:
-        response = requests.post('http://localhost:11434/api/generate', 
+        response = requests.post(OLLAMA_URL, 
             json={
-                'model': 'llama3:8b-instruct-q4_0',
+                'model': MODEL,
                 'prompt': prompt,
                 'stream': False,
                 'options': {
-                    'temperature': 0.5,
-                    'num_ctx': 16384, # Aumentando o contexto para 16k conforme imagem
+                    'temperature': 0.7,
                     'num_predict': 4000,
-                    'top_p': 0.9
+                    'top_p': 0.9,
+                    'num_ctx': 16384
                 }
             }, timeout=1200)
         return response.json().get('response', '')
@@ -29,82 +30,78 @@ def generate_with_ollama(prompt):
         print(f'Erro no Ollama: {e}')
         return None
 
-def check_image_exists(url):
-    res = supabase.table('portal_posts').select('id').eq('image_url', url).execute()
-    return len(res.data) > 0
-
 def process_queue():
-    # Pega apenas UM artigo por vez para garantir FOCO TOTAL
-    res = supabase.table('portal_posts').select('*').eq('status', 'queued').order('priority').limit(1).execute()
+    # MODO ARTESAO: Pega apenas 1 por vez para foco total
+    res = supabase.table('portal_posts').select('*').eq('status', 'queued').limit(1).execute()
     posts = res.data
 
     if not posts:
+        print('Fila vazia. Aguardando pautas...')
         return
 
-    post = posts[0]
-    post_id = post['id']
-    topic = post['title']
-    
-    print(f'--- INICIANDO PRODUÇÃO ARTESANAL: {topic} ---')
-    supabase.table('portal_posts').update({'status': 'generating'}).eq('id', post_id).execute()
-    
-    # 1, 2 e 3. Algoritmo de Produção de Elite
-    prompt = f"""
-    Aja como Editor-Chefe Sênior do Portal M4. Produza um artigo de autoridade máxima.
-    TEMA: {topic}
-    
-    ALGORITMO DE PRODUÇÃO:
-    1. LINGUAGEM: Português Brasil (impecável).
-    2. TOM: 3ª Pessoa Institucional (Portal M4).
-    3. PROFUNDIDADE: Mínimo de 1200 palavras.
-    4. ESTRUTURA: Lead impactante, subtítulos H2 técnicos, e seção 'Visão M4'.
-    5. VALIDAÇÃO: Cite fontes reais (Bloomberg, Forbes, Relatórios Governamentais).
-    6. FINALIZAÇÃO: No final do texto, inclua EXATAMENTE 10 Hashtags e 10 Palavras-Chave relevantes.
-    7. REVISÃO: Realize uma revisão ortográfica e gramatical rigorosa.
-    8. LIMPEZA: Proibido Emojis, caracteres especiais decorativos ou vícios de IA.
-    
-    Escreva o artigo completo agora.
-    """
-    
-    content = generate_with_ollama(prompt)
-    
-    if content and len(content) > 1000:
-        # 4 e 5. Curadoria Visual Única
-        searchTerm = topic.split(' ')[0].lower()
-        image_url = f"https://source.unsplash.com/1400x800/?{searchTerm},professional&sig={post_id[:8]}"
+    for post in posts:
+        post_id = post['id']
+        topic = post['title']
+        print(f'>>> MODO ARTESAO INICIADO: {topic}')
         
-        # Verificar se ja existe (se sim, mudar o sig)
-        if check_image_exists(image_url):
-            image_url += "-unique"
-
-        # 2.2 Definir agendamento (+1 hora)
-        finish_time = datetime.datetime.now()
-        publish_time = finish_time + datetime.timedelta(hours=1)
+        supabase.table('portal_posts').update({'status': 'generating'}).eq('id', post_id).execute()
         
-        # Limpeza final de Markdown
-        content = content.replace('***', '').replace('**', '')
-
-        # 6. Publicação / Agendamento
-        supabase.table('portal_posts').update({
-          'content': content,
-          'excerpt': content[:300].strip().split('\n')[0] + '...',
-          'image_url': image_url,
-          'status': 'published', # Marcus quer mandar para fila de publicacao (Publicado)
-          'published_at': publish_time.isoformat(),
-          'reviewer_notes': '✅ PRODUÇÃO ARTESANAL FINALIZADA. Protocolo 8GB de Foco Total.',
-          'updated_at': finish_time.isoformat()
-        }).eq('id', post_id).execute()
+        # PROMPT DE ELITE M4 (SEM ASTERISCOS)
+        prompt = f"""
+        Aja como Editor-Chefe Sênior do Portal M4. Sua missão é produzir um artigo de elite.
+        TEMA: {topic}
         
-        print(f'--- FINALIZADO COM SUCESSO: {topic} ---')
-    else:
-        print(f'Falha na qualidade do artigo {post_id}.')
-        supabase.table('portal_posts').update({'status': 'review', 'reviewer_notes': '⚠️ Baixa qualidade na geração artesanal.'}).eq('id', post_id).execute()
+        REGRAS SOBERANAS:
+        1. Texto com mais de 1200 palavras, profundo e institucional.
+        2. Idioma: Português Brasil (PT-BR).
+        3. Formatação: Use apenas texto puro. PROIBIDO usar asteriscos (**), negritos ou qualquer marcação Markdown.
+        4. No final, inclua sempre exatamente 10 hashtags e 10 palavras-chave relevantes.
+        5. O tom deve ser de autoridade máxima em finanças e tecnologia.
+        
+        ESTRUTURA:
+        - Título de impacto (sem aspas ou asteriscos)
+        - Introdução profunda
+        - Pelo menos 5 subtítulos de desenvolvimento
+        - Conclusão estratégica
+        - Bloco de Hashtags e Keywords
+        
+        IMPORTANTE: Não use nenhuma marcação de formatação além de quebras de linha.
+        """
+        
+        content = generate_content(prompt)
+        
+        if content:
+            # Gerar Resumo curto
+            summary_prompt = f"Crie um resumo de 2 frases para este texto (Texto puro): {content[:1000]}"
+            excerpt = generate_content(summary_prompt) or "Analise profunda sobre o tema."
+            
+            # Gerar Categoria
+            cat_prompt = f"Qual categoria melhor define este tema: '{topic}'? Escolha apenas uma das seguintes: MERCADO FINANCEIRO, INVESTIMENTOS, INTELIGENCIA ARTIFICIAL, TECNOLOGIA, CARREIRA, EDUCAO FINANCEIRA, EMPREENDEDORISMO. Responda apenas o nome da categoria."
+            category = generate_content(cat_prompt) or "TECNOLOGIA"
+            category = category.upper().strip()
 
-if __name__ == '__main__':
-    print('M4 Worker 8GB: MODO ARTESÃO (FOCO TOTAL) ATIVADO!')
+            # Gerar Data de Publicacao (1 hora apos finalizar)
+            scheduled_at = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(time.time() + 3600))
+
+            supabase.table('portal_posts').update({
+                'content': content,
+                'excerpt': excerpt,
+                'category': category,
+                'status': 'review',
+                'scheduled_at': scheduled_at,
+                'published_at': None
+            }).eq('id', post_id).execute()
+            
+            print(f'>>> ARTIGO FINALIZADO COM SUCESSO: {topic}')
+        else:
+            supabase.table('portal_posts').update({'status': 'queued'}).eq('id', post_id).execute()
+            print(f'!!! FALHA NA GERACAO: {topic}')
+
+if __name__ == "__main__":
+    print("M4 ARTISAN WORKER v3.1 - ATIVO")
     while True:
         try:
             process_queue()
         except Exception as e:
-            print(f'Erro no loop: {e}')
-        time.sleep(20) # Intervalo para respirar entre artigos
+            print(f"Erro no loop principal: {e}")
+        time.sleep(30)

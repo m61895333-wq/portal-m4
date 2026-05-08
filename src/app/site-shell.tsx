@@ -3,6 +3,11 @@ import { categories } from "@/lib/categories";
 import { getPerformance } from "@/lib/portal-cms";
 import { MobileMenuTrigger } from "./mobile-nav";
 
+/**
+ * Sidebar (Menu Lateral)
+ * Apresenta a marca, as categorias de navegação (Editorias) e o Contador de Impacto Global.
+ * O contador de acessos lê o `absoluteTotal` do banco de dados de visualizações globais.
+ */
 export async function Sidebar() {
   const perf = await getPerformance("month");
   
@@ -33,6 +38,10 @@ export async function Sidebar() {
   );
 }
 
+/**
+ * Header (Cabeçalho Superior)
+ * Contém o menu principal (Home, Sobre, Contato) e o disparador do menu mobile.
+ */
 export async function Header() {
   const perf = await getPerformance("month");
 
@@ -50,6 +59,10 @@ export async function Header() {
   );
 }
 
+/**
+ * Footer (Rodapé)
+ * Apresenta informações de marca, mapa do site e links do ecossistema do Grupo M4.
+ */
 export function Footer() {
   return (
     <footer className="footer">

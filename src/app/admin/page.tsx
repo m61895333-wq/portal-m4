@@ -14,7 +14,6 @@ import {
   removeTagAction,
   savePostAction,
   setStatusAction,
-  toggleActiveAction,
   toggleAutonomyAction
 } from "./actions";
 
@@ -24,6 +23,13 @@ type Props = {
   searchParams: Promise<{ status?: string; period?: "week" | "month"; erro?: string }>;
 };
 
+/**
+ * AdminPage
+ * Painel de Controle e "War Room" do Portal M4.
+ * Protegido por autenticação de sessão.
+ * Permite monitorar a saúde da rede, configurar o Agente de Autonomia Total (Modo Artesão)
+ * e aprovar/rejeitar/editar os artigos na fila.
+ */
 export default async function AdminPage({ searchParams }: Props) {
   const params = await searchParams;
   const authenticated = await isAdminAuthenticated();

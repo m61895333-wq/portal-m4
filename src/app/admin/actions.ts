@@ -7,12 +7,21 @@ import { signInAdmin, signOutAdmin } from "@/lib/admin-auth";
 import { generateEditorialDraft } from "@/lib/article-generator";
 import type { PortalPost, PostStatus } from "@/lib/types";
 
+/**
+ * actions.ts
+ * Server Actions responsáveis pelas mutações de dados no Portal M4.
+ * Inclui: Autenticação, CRUD de Artigos (Modo Artesão), Controle do Agente e Tags.
+ */
+
 function revalidatePortal() {
   revalidatePath("/");
   revalidatePath("/portal-m4");
   revalidatePath("/admin");
 }
 
+/**
+ * Autentica o administrador usando os dados do formulário e redireciona.
+ */
 export async function loginAction(_: unknown, formData: FormData) {
   const ok = await signInAdmin(formData);
   if (!ok) return { error: "Usuario ou senha invalidos." };

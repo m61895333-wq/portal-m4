@@ -4,6 +4,12 @@ import { listPublicPosts } from "@/lib/portal-cms";
 import { Footer, Header, Sidebar } from "./site-shell";
 import styles from "./portal.module.css";
 
+/**
+ * HomePage
+ * Ponto de entrada do Portal M4. 
+ * Apresenta o conteúdo editorial (Artigo de Impacto no Hero e Grade de Novidades).
+ * A exibição depende de posts aprovados vindos do banco de dados (Modo Artesão).
+ */
 export default async function HomePage() {
   const posts = await listPublicPosts();
   
@@ -67,9 +73,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <div className="container">
-          <div className="adSlot" id="ad-home-hero-bottom">Espaco Reservado para Anuncio</div>
-        </div>
+        {/* O espaço de anúncios foi removido conforme diretriz de design limpo */}
 
         <div className="container" style={{ paddingTop: 100, paddingBottom: 100 }}>
           <section>

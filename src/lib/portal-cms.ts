@@ -23,6 +23,11 @@ type DbPost = {
   is_active: boolean;
 };
 
+/**
+ * fromDb
+ * Sanitiza e formata os dados vindos do banco de dados (Supabase).
+ * REGRA: Remove todos os asteriscos (**) de título, resumo e conteúdo.
+ */
 function fromDb(row: DbPost): PortalPost {
   const imageUrl = row.image_url || "https://images.unsplash.com/photo-1611974714658-058f40da23fb?q=80&w=2070&auto=format&fit=crop";
 
@@ -161,6 +166,11 @@ export async function listCategoryPosts(category: string) {
   return posts.filter((post) => post.category === category);
 }
 
+/**
+ * [LEGADO] createDraft
+ * Gera um artigo sincronicamente (via API Vercel).
+ * Substituído pelo Modo Artesão (createQueuedPost) devido a limites de timeout da Vercel.
+ */
 export async function createDraft(input: { topic?: string; sourceUrl?: string; approach?: string; scheduledAt?: string }) {
   const draft = await generateEditorialDraft(input);
   if (!hasSupabaseConfig()) return { ...fallbackPost, ...draft, id: "local-draft" };
@@ -174,6 +184,11 @@ export async function createDraft(input: { topic?: string; sourceUrl?: string; a
   return fromDb(data as DbPost);
 }
 
+/**
+ * createQueuedPost (Modo Artesão)
+ * Adiciona um novo tópico à fila. O Agente (VPS 8GB) processará este item
+ * de forma autônoma e gerará um conteúdo profundo de 16k tokens.
+ */
 export async function createQueuedPost(input: { topic: string; scheduledAt?: string }) {
   if (!hasSupabaseConfig()) throw new Error("Supabase não configurado.");
   
