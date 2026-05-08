@@ -411,7 +411,7 @@ export default async function AdminPage({ searchParams }: Props) {
                     <form action={remakePostAction} style={{ flex: 1 }}>
                       <input type="hidden" name="id" value={post.id} />
                       <input type="hidden" name="title" value={post.title} />
-                      <button className="buttonSecondary" type="submit" style={{ width: '100%', fontSize: '0.65rem' }}>REFAZER COM IA</button>
+                      <button className="buttonSecondary" type="submit" style={{ width: '100%', fontSize: '0.65rem' }}>REFAZER</button>
                     </form>
                     <form action={deletePostAction}>
                       <input type="hidden" name="id" value={post.id} />

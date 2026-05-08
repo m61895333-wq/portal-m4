@@ -68,7 +68,9 @@ export async function createSingleDraftAction(formData: FormData) {
  */
 export async function savePostAction(formData: FormData) {
   const id = String(formData.get("id"));
-  
+  let success = false;
+  let errorMsg = "";
+
   try {
     // CAPTURA E VALIDAÇÃO DE DADOS
     const title = String(formData.get("title") ?? "").replace(/\*/g, '').trim();
@@ -96,13 +98,16 @@ export async function savePostAction(formData: FormData) {
 
     await updatePost(id, updates);
     revalidatePortal();
-    
-    // Redireciona com sinal de sucesso para o painel
-    redirect("/admin?sucesso=salvo");
+    success = true;
   } catch (err: any) {
     console.error("[SALVAR] Erro crítico na persistência:", err);
-    // Em caso de erro, devolve para o painel com a mensagem explicativa
-    redirect(`/admin?erro=salvamento&msg=${encodeURIComponent(err.message)}`);
+    errorMsg = err.message;
+  }
+
+  if (success) {
+    redirect("/admin?sucesso=salvo");
+  } else {
+    redirect(`/admin?erro=salvamento&msg=${encodeURIComponent(errorMsg)}`);
   }
 }
 
@@ -128,9 +133,10 @@ export async function deletePostAction(formData: FormData) {
 
 export async function remakePostAction(formData: FormData) {
   const id = String(formData.get("id"));
-  
+  let success = false;
+  let errorMsg = "";
+
   try {
-    // FERRAMENTA DE RESGATE: Limpamos o conteúdo antigo para que a IA comece do zero com força total
     await updatePost(id, {
       status: "queued",
       content: "Limpando rascunho anterior e iniciando processamento de elite...",
@@ -139,11 +145,16 @@ export async function remakePostAction(formData: FormData) {
     });
     
     revalidatePortal();
-    return { success: true };
+    success = true;
   } catch (err: any) {
-    console.error("[RESGATE] Falha ao acionar ferramenta:", err);
-    // Redireciona com erro para o painel saber o que houve
-    redirect(`/admin?erro=resgate&msg=${encodeURIComponent(err.message)}`);
+    console.error("[RESGATE] Falha:", err);
+    errorMsg = err.message;
+  }
+
+  if (success) {
+    redirect("/admin?sucesso=resgate");
+  } else {
+    redirect(`/admin?erro=resgate&msg=${encodeURIComponent(errorMsg)}`);
   }
 }
 
