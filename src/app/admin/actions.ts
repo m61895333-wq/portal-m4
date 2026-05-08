@@ -62,30 +62,48 @@ export async function createSingleDraftAction(formData: FormData) {
 }
 
 
+/**
+ * savePostAction (Persistência Segura)
+ * Salva as edições manuais feitas no painel. Inclui limpeza de asteriscos e proteção contra erros.
+ */
 export async function savePostAction(formData: FormData) {
   const id = String(formData.get("id"));
-  const status = String(formData.get("status")) as PostStatus;
-  const updates: Partial<PortalPost> = {
-    title: String(formData.get("title") ?? ""),
-    slug: String(formData.get("slug") ?? ""),
-    excerpt: String(formData.get("excerpt") ?? ""),
-    content: String(formData.get("content") ?? ""),
-    imageUrl: String(formData.get("imageUrl") ?? ""),
-    category: String(formData.get("category") ?? ""),
-    tags: String(formData.get("tags") ?? "")
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter(Boolean),
-    status,
-    priority: Number(formData.get("priority") ?? 50),
-    scheduledAt: String(formData.get("scheduledAt") ?? "") || null,
-    publishedAt: status === "published" || status === "approved" ? new Date().toISOString() : null,
-    reviewerNotes: String(formData.get("reviewerNotes") ?? ""),
-    isActive: formData.get("isActive") === "on"
-  };
+  
+  try {
+    // CAPTURA E VALIDAÇÃO DE DADOS
+    const title = String(formData.get("title") ?? "").replace(/\*/g, '').trim();
+    const content = String(formData.get("content") ?? "").replace(/\*/g, '').trim();
+    const excerpt = String(formData.get("excerpt") ?? "").replace(/\*/g, '').trim();
+    
+    if (!id || !title) throw new Error("ID ou Título ausentes.");
 
-  await updatePost(id, updates);
-  revalidatePortal();
+    const updates: Partial<PortalPost> = {
+      title,
+      content,
+      excerpt,
+      slug: String(formData.get("slug") ?? ""),
+      imageUrl: String(formData.get("imageUrl") ?? ""),
+      category: String(formData.get("category") ?? ""),
+      tags: String(formData.get("tags") ?? "")
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+      priority: Number(formData.get("priority") ?? 50),
+      scheduledAt: String(formData.get("scheduledAt") ?? "") || null,
+      reviewerNotes: String(formData.get("reviewerNotes") ?? ""),
+      isActive: formData.get("isActive") === "on"
+    };
+
+    await updatePost(id, updates);
+    revalidatePortal();
+    
+    // Redireciona com sinal de sucesso para o painel
+    redirect("/admin?sucesso=salvo");
+  } catch (err: any) {
+    console.error("[SALVAR] Erro crítico na persistência:", err);
+    // Em caso de erro, devolve para o painel com a mensagem explicativa
+    redirect(`/admin?erro=salvamento&msg=${encodeURIComponent(err.message)}`);
+  }
 }
 
 export async function setStatusAction(formData: FormData) {
