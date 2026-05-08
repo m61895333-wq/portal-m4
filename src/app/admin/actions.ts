@@ -2,16 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { 
-  addTopicTag, 
-  createQueuedPost, 
-  deletePost, 
-  removeTopicTag, 
-  updatePost, 
-  setAutonomyStatus, 
-  listPosts, 
-  recordPageView 
+import {
+  addTopicTag,
+  createQueuedPost,
+  deletePost,
+  removeTopicTag,
+  updatePost,
+  setAutonomyStatus,
+  listPosts,
+  recordPageView
 } from "@/lib/portal-cms";
+import { getSupabaseAdmin } from "@/lib/supabase";
 import { signInAdmin, signOutAdmin } from "@/lib/admin-auth";
 import type { PortalPost, PostStatus } from "@/lib/types";
 
@@ -63,11 +64,10 @@ export async function savePostAction(formData: FormData) {
 export async function createSingleDraftAction(formData: FormData) {
   const topic = formData.get("topic") as string;
   const sourceUrl = formData.get("sourceUrl") as string;
-  const approach = formData.get("approach") as string;
   const scheduledAt = formData.get("scheduledAt") as string;
   const index = formData.get("index") as string;
 
-  const finalTopic = topic || sourceUrl || "Tendências de Mercado";
+  const finalTopic = topic || sourceUrl || "Tendencias de Mercado";
 
   try {
     const result = await createQueuedPost({
@@ -80,7 +80,6 @@ export async function createSingleDraftAction(formData: FormData) {
     return { success: false, error: err.message || "Erro ao conectar com a fila da VPS." };
   }
 }
-
 
 export async function setStatusAction(formData: FormData) {
   const id = String(formData.get("id"));
@@ -116,16 +115,24 @@ export async function remakePostAction(formData: FormData) {
 export async function remakeImageAction(formData: FormData) {
   const id = String(formData.get("id"));
   const title = String(formData.get("title") || "tecnologia");
-  
-  // Extrai as palavras principais do título em português
-  const cleanTitle = title.replace(/[^a-zA-ZÀ-ÿ0-9 ]/g, "").split(" ").filter(w => w.length > 2).slice(0, 4).join(" ");
-  
-  // Prompt de engenharia para a IA gerar uma imagem 100% conceitual
-  const prompt = encodeURIComponent(`Abstract conceptual 3d render about ${cleanTitle}, corporate business style, dark premium background, neon lights, no faces, no people, highly detailed, 8k`);
-  
-  // Usa o Pollinations com seed baseada no tempo para garantir imagem única
-  const actualUrl = `https://image.pollinations.ai/prompt/${prompt}?width=1400&height=800&nologo=true&seed=${Date.now()}`;
-  
+
+  // Extrai as palavras principais do titulo em portugues (filtra stopwords curtas)
+  const cleanTitle = title
+    .replace(/[^a-zA-ZÀ-ÿ0-9 ]/g, "")
+    .split(" ")
+    .filter(w => w.length > 3)
+    .slice(0, 5)
+    .join(" ");
+
+  // Prompt de engenharia: imagem conceitual premium, sem rostos ou pessoas
+  const prompt = encodeURIComponent(
+    `Abstract conceptual 3d render about ${cleanTitle}, corporate premium style, dark background with neon cyan and gold accents, no faces, no people, ultra detailed, 8k, award winning`
+  );
+
+  // Pollinations AI com seed unica por artigo
+  const seed = parseInt(id.replace(/[^0-9]/g, "").slice(0, 8)) || Date.now();
+  const actualUrl = `https://image.pollinations.ai/prompt/${prompt}?width=1400&height=800&nologo=true&seed=${seed}`;
+
   await updatePost(id, { imageUrl: actualUrl });
   revalidatePortal();
 }
@@ -166,21 +173,19 @@ export async function recordHitAction(path: string) {
 
 export async function contactAction(formData: FormData) {
   try {
-    const name = String(formData.get(\"name\") ?? \"\");
-    const email = String(formData.get(\"email\") ?? \"\");
-    const message = String(formData.get(\"message\") ?? \"\");
-    
-    // Registramos no banco de dados (tabela portal_contacts)
-    // Se a tabela nao existir, o Supabase retornara erro, mas o fluxo nao trava.
+    const name = String(formData.get("name") ?? "");
+    const email = String(formData.get("email") ?? "");
+    const message = String(formData.get("message") ?? "");
+
     const { error } = await getSupabaseAdmin()
-      .from(\"portal_contacts\")
+      .from("portal_contacts")
       .insert({ name, email, message } as never);
-      
-    if (error) console.error(\"[CONTATO] Erro no banco:\", error.message);
-    
+
+    if (error) console.error("[CONTATO] Erro no banco:", error.message);
+
     return { success: true };
   } catch (err) {
-    console.error(\"[CONTATO] Falha:\", err);
+    console.error("[CONTATO] Falha:", err);
     return { success: false };
   }
 }
