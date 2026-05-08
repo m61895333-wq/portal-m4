@@ -29,9 +29,9 @@ function fromDb(row: DbPost): PortalPost {
   return {
     id: row.id,
     slug: row.slug,
-    title: row.title,
-    excerpt: row.excerpt,
-    content: row.content,
+    title: row.title.replace(/\*/g, '').trim(),
+    excerpt: row.excerpt.replace(/\*/g, '').trim(),
+    content: row.content.replace(/\*/g, '').trim(),
     imageUrl: imageUrl,
     category: row.category,
     tags: row.tags ?? [],

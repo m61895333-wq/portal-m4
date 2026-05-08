@@ -7,19 +7,21 @@ export async function Sidebar() {
   const perf = await getPerformance("month");
   
   return (
-    <aside className="sidebar">
-      <Link href="/" className="brand" aria-label="Portal M4">
+    <aside className="sidebar" style={{ width: '260px', minWidth: '260px', maxWidth: '260px' }}>
+      <Link href="/" className="brand" aria-label="Portal M4" style={{ padding: '32px 24px' }}>
         <img src="/portal-m4-brand-logo.png" alt="Logo Portal M4" />
         <span>Portal M4</span>
       </Link>
 
       <div style={{ flex: 1 }} />
 
-      <div className="sidebarStats" style={{ padding: '40px 24px', borderTop: '1px solid var(--line)' }}>
-        <div className="statsCard" style={{ background: 'linear-gradient(135deg, rgba(32, 217, 255, 0.1), rgba(53, 242, 185, 0.1))', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: 800, color: 'var(--cyan)', letterSpacing: '0.1em', marginBottom: '8px', textTransform: 'uppercase' }}>Impacto Global M4</span>
-          <span className="statsValue" style={{ fontSize: '1.8rem', fontWeight: 900, color: 'white' }}>{perf.absoluteTotal.toLocaleString('pt-BR')}</span>
-          <span className="statsLabel" style={{ display: 'block', fontSize: '0.75rem', opacity: 0.6, marginTop: '4px' }}>Acessos Registrados</span>
+      <div className="sidebarStats" style={{ padding: '24px', borderTop: '1px solid var(--line)' }}>
+        <div className="statsCard" style={{ background: 'linear-gradient(135deg, rgba(32, 217, 255, 0.08), rgba(53, 242, 185, 0.08))', padding: '20px', borderRadius: '12px', border: '1px solid var(--line)' }}>
+          <span style={{ display: 'block', fontSize: '0.6rem', fontWeight: 800, color: 'var(--cyan)', letterSpacing: '0.1em', marginBottom: '8px', textTransform: 'uppercase' }}>Impacto M4</span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+            <span style={{ fontSize: '1.6rem', fontWeight: 900, color: 'white' }}>{perf.absoluteTotal.toLocaleString('pt-BR')}</span>
+            <span style={{ fontSize: '0.65rem', opacity: 0.5, textTransform: 'uppercase' }}>Leituras</span>
+          </div>
         </div>
       </div>
     </aside>
