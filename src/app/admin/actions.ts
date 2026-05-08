@@ -111,13 +111,22 @@ export async function deletePostAction(formData: FormData) {
 export async function remakePostAction(formData: FormData) {
   const id = String(formData.get("id"));
   
-  // REGRA SOBERANA: Em vez de gerar aqui (timeout), mandamos para a fila do Worker 8GB
-  await updatePost(id, {
-    status: "queued",
-    reviewerNotes: "⏳ REFAZENDO CONTEUDO: O servidor de 8GB esta gerando uma nova versao profunda deste artigo... (Aguarde 1-2 minutos)"
-  });
-  
-  revalidatePortal();
+  try {
+    // FERRAMENTA DE RESGATE: Limpamos o conteúdo antigo para que a IA comece do zero com força total
+    await updatePost(id, {
+      status: "queued",
+      content: "Limpando rascunho anterior e iniciando processamento de elite...",
+      excerpt: "O Diretor de Arte e Redação IA está refazendo este artigo agora...",
+      reviewerNotes: "⚠️ RESGATE EDITORIAL ATIVO: Gerando nova versão profunda (1200+ palavras) com inteligência visual v3.5."
+    });
+    
+    revalidatePortal();
+    return { success: true };
+  } catch (err: any) {
+    console.error("[RESGATE] Falha ao acionar ferramenta:", err);
+    // Redireciona com erro para o painel saber o que houve
+    redirect(`/admin?erro=resgate&msg=${encodeURIComponent(err.message)}`);
+  }
 }
 
 export async function remakeImageAction(formData: FormData) {
