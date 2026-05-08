@@ -54,34 +54,88 @@ export async function generateEditorialDraft(input: {
   const baseTopic = input.topic?.trim() || input.sourceUrl?.trim() || "tendencias de mercado";
   const category = pickCategory(`${baseTopic} ${input.approach ?? ""}`);
   
-  console.log(`[GERADOR SEQUENCIAL] Iniciando: ${baseTopic}`);
+  // ESTILOS DE ABERTURA ROTATIVOS — garante variedade e humanidade entre artigos
+  const OPENING_STYLES = [
+    {
+      nome: "DADO_CHOCANTE",
+      instrucao: `Comece com um dado ou estatística surpreendente e específica que desafie o senso comum do leitor. Ex: "Em 2025, 73% dos gestores de fundos brasileiros..."`
+    },
+    {
+      nome: "PERGUNTA_RETORICA",
+      instrucao: `Abra com uma pergunta retórica direta e provocativa que force reflexão imediata. Ex: "O que acontece quando a maior economia do mundo decide..."`
+    },
+    {
+      nome: "CENA_VIVIDA",
+      instrucao: `Construa uma cena concreta e cinematográfica (2-3 frases) que situe o leitor em um momento específico. Ex: "Era terça-feira quando os terminais da Nasdaq registraram..."`
+    },
+    {
+      nome: "PARADOXO_INSTIGANTE",
+      instrucao: `Comece com um paradoxo ou contradição aparente sobre o tema. Ex: "Quanto mais dinheiro circula neste mercado, menor é a chance de enriquecimento individual."`
+    },
+    {
+      nome: "DECLARACAO_OUSADA",
+      instrucao: `Abra com uma declaração direta, ousada e editorial. Ex: "A era dos juros fáceis acabou e nenhum investidor brasileiro está preparado para isso."`
+    },
+    {
+      nome: "CONTEXTO_HISTORICO",
+      instrucao: `Situe o leitor com um marco histórico específico que cria contraste com o presente. Ex: "Quando o Plano Real completou 30 anos, o Brasil ainda carregava..."`
+    },
+    {
+      nome: "CITACAO_AUTORIDADE",
+      instrucao: `Comece com uma citação atribuída a uma autoridade do setor (economista, CEO, Banco Central) que sintetize o conflito central do artigo. Use aspas e nome da fonte.`
+    },
+    {
+      nome: "CONTRASTE_DRAMATICO",
+      instrucao: `Abra contrastando dois cenários opostos em frases curtas. Ex: "De um lado, recordes na bolsa. Do outro, inadimplência no maior nível em uma década."`
+    },
+    {
+      nome: "NUMERO_IMPACTANTE",
+      instrucao: `Comece com um número específico e impactante seguido de contexto imediato. Ex: "R$ 2,4 trilhões — esse é o tamanho do buraco fiscal que o Brasil precisará fechar..."`
+    },
+    {
+      nome: "VIRADA_NARRATIVA",
+      instrucao: `Inicie com o que 'todo mundo acredita' sobre o tema e quebre essa expectativa. Ex: "A crença popular diz que investir em imóveis é sempre seguro. Os dados de 2025 contam outra história."`
+    }
+  ];
+
+  const style = OPENING_STYLES[Math.floor(Math.random() * OPENING_STYLES.length)];
+  console.log(`[GERADOR SEQUENCIAL] Estilo de abertura: ${style.nome}`);
 
   // 1. ESTRUTURA E CONTEÚDO (PROTOCOLO ZERO-REVIEW)
   const articlePrompt = `
-    Aja como Editor-Chefe Sênior do Portal M4. 
-    Sua missão é produzir um artigo de autoridade máxima pronto para publicação imediata sem revisão humana.
+    Você é o Editor-Chefe Sênior do Portal M4, referência em jornalismo financeiro e tecnológico no Brasil.
     
     TEMA: ${baseTopic}
     
-    DIRETRIZES DE ELITE:
-    1. TOM INSTITUCIONAL: Use estritamente a 3ª pessoa. Proibido "eu" ou "nós". Use "O Portal M4 analisa...", "Observa-se no mercado...".
-    2. PROFUNDIDADE TÉCNICA: Mínimo de 1200 palavras. Explore ramificações econômicas e tecnológicas.
-    3. VALIDAÇÃO DE DADOS: Cite fontes reais (Bloomberg, Forbes, Relatórios Governamentais, Gartner) para embasar argumentos.
-    4. ZERO EMOJIS e ZERO CARACTERES ESPECIAIS decorativos.
-    5. FORMATAÇÃO REDATORIAL: 
-       - Lead impactante (O que? Por que importa?).
-       - Subtítulos H2 claros e profissionais.
-       - Conclusão com "Visão M4" (projeção de futuro).
-    6. ANTI-AI-ISMS: Proibido frases como "Neste artigo vamos...", "Em conclusão...", "Espero que isso ajude". Vá direto ao ponto.
+    == REGRA DE ABERTURA (OBRIGATÓRIA) ==
+    Estilo sorteado: ${style.nome}
+    Instrução: ${style.instrucao}
+    O primeiro parágrafo DEVE seguir EXATAMENTE este estilo.
+    PROIBIDO começar com: "Nos últimos anos", "Em um cenário", "No contexto atual", "Com o avanço", "A inteligência artificial", "O mercado financeiro" ou qualquer abertura genérica e previsível.
     
-    ESTRUTURA JSON (SEM CRASES):
+    == ESTRUTURA ==
+    1. LEAD impactante (seguindo o estilo acima — 3 a 4 linhas)
+    2. ## [Subtítulo — Análise do Cenário]
+    3. ## [Subtítulo — Dados e Fontes] (cite Bloomberg, Reuters, IBGE, Banco Central, Gartner, FMI)
+    4. ## [Subtítulo — Impacto Prático para o Leitor]
+    5. ## Visão M4 (projeção estratégica exclusiva)
+    
+    == REGRAS ABSOLUTAS ==
+    1. Tom HUMANO, fluente, inteligente — não robótico nem repetitivo
+    2. Texto puro: SEM asteriscos, SEM markdown bold (**palavra**)
+    3. Mínimo de 1.000 palavras com profundidade real
+    4. 3ª pessoa sempre — proibido "eu", "nós", "você"
+    5. ANTI-AI-ISMS: proibido "Neste artigo vamos...", "Em conclusão...", "Espero que..."
+    6. No final: ESPAÇO DUPLO, depois exatamente 10 hashtags, depois 10 palavras-chave separadas por vírgula
+    
+    ESTRUTURA JSON ESPERADA (SEM CRASES):
     {
-      "content": "## O Cenário Atual\\n\\n[Conteúdo...]\\n\\n## Análise de Dados e Fontes\\n\\n[Conteúdo com citações...]\\n\\n## Visão M4\\n\\n[Projeção estratégica...]\\n\\n[ESPAÇO DUPLO]\\n\\n[MÍNIMO 10 HASHTAGS]\\n\\n[MÍNIMO 10 PALAVRAS-CHAVE ESTRATÉGICAS]"
+      "title": "Título jornalístico impactante",
+      "excerpt": "Lead de até 200 caracteres — a frase de abertura do artigo",
+      "content": "Texto completo aqui..."
     }
     
-    CRÍTICO: No final de todo o texto (após as fontes), insira um ESPAÇO DUPLO e adicione:
-    1. Exatamente 10 Hashtags (ex: #MercadoFinanceiro #IA) relevantes.
-    2. Exatamente 10 Palavras-chave separadas por vírgula (ex: Investimento, Tecnologia) relevantes.
+    Responda APENAS o JSON. Escreva em português do Brasil.
   `;
 
   const res = await model.generateContent(articlePrompt);

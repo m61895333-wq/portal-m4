@@ -189,11 +189,78 @@ def process_queue():
         
         supabase.table('portal_posts').update({'status': 'generating'}).eq('id', post_id).execute()
         
-        prompt = f"""
-        Aja como Editor-Chefe Sênior do Portal M4. TEMA: {topic}
-        REGRAS: Texto puro, sem asteriscos, profundo, 10 hashtags e 10 keywords ao fim (espaço duplo).
-        """
+        # ESTILOS DE ABERTURA ROTATIVOS - sorteio garante variedade entre artigos
+        OPENING_STYLES = [
+            {
+                "nome": "DADO_CHOCANTE",
+                "instrucao": "Comece com um dado ou estatística surpreendente e específica que desafie o senso comum do leitor sobre o tema. Ex: 'Em 2025, 73% dos gestores de fundos...'"
+            },
+            {
+                "nome": "PERGUNTA_RETORICA",
+                "instrucao": "Abra com uma pergunta retórica direta e provocativa que force o leitor a refletir imediatamente. A pergunta deve gerar tensão ou curiosidade. Ex: 'O que acontece quando a maior economia do mundo...'"
+            },
+            {
+                "nome": "CENA_VIVIDA",
+                "instrucao": "Construa uma cena concreta e cinematográfica (2-3 frases) que situe o leitor em um momento específico relacionado ao tema. Sem metáforas clichês. Ex: 'Era terça-feira quando os terminais da Nasdaq registraram...'"
+            },
+            {
+                "nome": "PARADOXO_INSTIGANTE",
+                "instrucao": "Comece com um paradoxo ou contradição aparente sobre o tema que só fará sentido ao longo do texto. Ex: 'Quanto mais dinheiro circula neste mercado, menor é a chance de enriquecimento individual.'"
+            },
+            {
+                "nome": "DECLARACAO_OUSADA",
+                "instrucao": "Abra com uma declaração direta, ousada e controversa sobre o tema, como um editorial de alto nível. Sem rodeios. Ex: 'A era dos juros fáceis acabou e nenhum investidor brasileiro está preparado para isso.'"
+            },
+            {
+                "nome": "CONTEXTO_HISTORICO",
+                "instrucao": "Situe o leitor com um marco histórico específico e relevante que cria contraste com o presente. Ex: 'Quando o Plano Real completou 30 anos, o Brasil ainda carregava...'"
+            },
+            {
+                "nome": "CITACAO_AUTORIDADE",
+                "instrucao": "Comece com uma citação real ou atribuída a uma autoridade do setor (economista, CEO, Banco Central) que sintetize o conflito central do artigo. Use aspas e nome da fonte."
+            },
+            {
+                "nome": "CONTRASTE_DRAMATICO",
+                "instrucao": "Abra contrastando dois cenários opostos em frases curtas e impactantes. Ex: 'De um lado, recordes na bolsa. Do outro, inadimplência no maior nível em uma década.'"
+            },
+            {
+                "nome": "NUMERO_IMPACTANTE",
+                "instrucao": "Comece com um número específico e impactante (em moeda, percentual ou volume) seguido de seu contexto imediato. Ex: 'R$ 2,4 trilhões — esse é o tamanho do buraco fiscal que o Brasil precisará fechar...'"
+            },
+            {
+                "nome": "VIRADA_NARRATIVA",
+                "instrucao": "Inicie apresentando o que 'todo mundo acredita' sobre o tema e logo quebre essa expectativa com a realidade. Ex: 'A crença popular diz que investir em imóveis é sempre seguro. Os dados de 2025 contam uma história diferente.'"
+            }
+        ]
         
+        style = random.choice(OPENING_STYLES)
+        print(f">>> ESTILO DE ABERTURA: {style['nome']}")
+        
+        prompt = f"""Você é o Editor-Chefe Sênior do Portal M4, referência em jornalismo financeiro e tecnológico no Brasil.
+
+TEMA DO ARTIGO: {topic}
+
+== REGRA DE ABERTURA (OBRIGATÓRIA) ==
+Estilo sorteado: {style['nome']}
+Instrução de abertura: {style['instrucao']}
+O primeiro parágrafo DEVE seguir este estilo. Proibido começar com "Nos últimos anos", "Em um cenário", "No contexto atual", "Com o avanço" ou qualquer frase genérica.
+
+== ESTRUTURA DO ARTIGO ==
+1. LEAD (estilo acima, 3-4 linhas impactantes)
+2. ## [Subtítulo H2 - Análise do Cenário]
+3. ## [Subtítulo H2 - Dados e Fontes] (cite Bloomberg, Reuters, IBGE, Banco Central, Gartner)
+4. ## [Subtítulo H2 - Impacto Prático] (o que o leitor deve fazer/pensar)
+5. ## Visão M4 (projeção estratégica exclusiva do Portal M4)
+
+== REGRAS ABSOLUTAS ==
+- Texto puro, SEM asteriscos, SEM markdown bold (**palavra**)
+- Tom humano, fluente e inteligente — não robótico
+- Mínimo 800 palavras
+- 3ª pessoa (proibido "eu", "nós", "você")
+- No final: espaço duplo, então 10 hashtags relevantes, depois 10 palavras-chave separadas por vírgula
+
+Escreva agora em português do Brasil:"""
+
         content = generate_content(prompt)
         
         if content:
