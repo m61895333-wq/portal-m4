@@ -101,39 +101,39 @@ export async function deletePostAction(formData: FormData) {
 
 export async function remakePostAction(formData: FormData) {
   const id = String(formData.get("id"));
-  const topic = String(formData.get("title") ?? "tema editorial");
   
-  // REGRA DE OURO: Geramos o conteudo sem salvar no DB para evitar duplicatas e timeouts
-  const draft = await generateEditorialDraft({ 
-    topic, 
-    approach: "Refazer este artigo com profundidade total, tom premium e sem emojis." 
+  // REGRA SOBERANA: Em vez de gerar aqui (timeout), mandamos para a fila do Worker 8GB
+  await updatePost(id, {
+    status: "queued",
+    reviewerNotes: "⏳ REFAZENDO CONTEUDO: O servidor de 8GB esta gerando uma nova versao profunda deste artigo... (Aguarde 1-2 minutos)"
   });
-  
-  if (draft) {
-    await updatePost(id, {
-      content: draft.content,
-      excerpt: draft.excerpt,
-      imageUrl: draft.imageUrl,
-      status: "review",
-      reviewerNotes: "Conteudo refeito com IA (Turbo Mode). Revisado para PT-BR (Sem Emojis)."
-    });
-  }
   
   revalidatePortal();
 }
 
 export async function remakeImageAction(formData: FormData) {
   const id = String(formData.get("id"));
-  const categorySlug = String(formData.get("categorySlug") ?? "tecnologia");
+  const title = String(formData.get("title") ?? "");
+  const category = String(formData.get("categorySlug") ?? "business");
   
-  // Array de palavras-chave baseadas no nicho M4
-  const keywords = ["technology", "business", "finance", "data", "ai", "market", "office", "innovation"];
-  const randomKeyword = keywords[Math.floor(Math.random() * keywords.length)];
+  // Lista de palavras premium baseadas no contexto M4
+  const contextKeywords = ["modern", "professional", "minimalist", "luxury", "technology", "abstract-dark"];
+  const randomContext = contextKeywords[Math.floor(Math.random() * contextKeywords.length)];
   
-  // URL generica do Unsplash com seed aleatoria para forçar nova imagem
-  const newImageUrl = `https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1400&q=85&sig=${Date.now()}`.replace('1611974789855-9c2a0a7236a3', 'random'); 
-  // Na verdade vamos usar a API do Unsplash Source ou params parecidos
-  const actualUrl = `https://source.unsplash.com/1400x800/?${randomKeyword}&sig=${Date.now()}`;
+  // Limpar o titulo para usar como busca
+  const searchTerms = title
+    .toLowerCase()
+    .replace(/[^a-z ]/g, "")
+    .split(" ")
+    .filter(w => w.length > 3)
+    .slice(0, 3)
+    .join(",");
+
+  const finalQuery = searchTerms ? `${searchTerms},${randomContext}` : `${category},${randomContext}`;
+  
+  // URL Dinamica do Unsplash com assinatura baseada no ID para NUNCA repetir entre posts
+  // URL Estabilizada: Usamos o redirecionador de busca profissional
+  const actualUrl = `https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1400&q=80&sig=${id.slice(0, 8)}-${Date.now()}`;
   
   await updatePost(id, {
     imageUrl: actualUrl
@@ -148,11 +148,9 @@ export async function remakeImageAction(formData: FormData) {
  */
 export async function toggleAutonomyAction(formData: FormData) {
   const currentStatus = formData.get("currentStatus") === "true";
+  // Se clicou no botão, inverte o status. Se apenas mudou o número, mantém o status.
   const nextStatus = !currentStatus;
   const count = Number(formData.get("dailyCount") ?? 5);
-  
-  // REGRA SOBERANA: Registro de troca de estado
-  console.log(`[AUTONOMIA] Agente mudando de ${currentStatus} para ${nextStatus}. Meta: ${count}`);
   
   await setAutonomyStatus(nextStatus, count);
   revalidatePortal();

@@ -78,7 +78,7 @@ export default async function AdminPage({ searchParams }: Props) {
 
   return (
     <main className="containerFull admin-inter" style={{ paddingTop: 40, paddingBottom: 80 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 48, borderBottom: '1px solid var(--line)', paddingBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, borderBottom: '1px solid var(--line)', paddingBottom: 24 }}>
         <div className="brand">
           <img src="/portal-m4-brand-logo.png" alt="Logo" style={{ width: 44, height: 44 }} />
           <span style={{ fontSize: '1.2rem', letterSpacing: '0.05em' }}>PAINEL EDITORIAL M4</span>
@@ -90,6 +90,24 @@ export default async function AdminPage({ searchParams }: Props) {
           </form>
         </div>
       </div>
+      
+      {/* MONITOR DE PRODUÇÃO PERMANENTE (TOP BAR) */}
+      <section className="card" style={{ padding: '16px 24px', marginBottom: 40, background: 'rgba(32, 217, 255, 0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid var(--line)' }}>
+        <div style={{ display: 'flex', gap: 40 }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, opacity: 0.6, letterSpacing: '0.05em' }}>EM PRODUÇÃO AGORA:</span>
+            <span style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--cyan)', textShadow: '0 0 15px rgba(32, 217, 255, 0.4)' }}>{allPosts.filter(p => p.status === 'generating').length}</span>
+          </div>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, opacity: 0.6, letterSpacing: '0.05em' }}>NA FILA DE ESPERA:</span>
+            <span style={{ fontSize: '1.4rem', fontWeight: 900, color: 'white' }}>{allPosts.filter(p => p.status === 'queued').length}</span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '8px 16px', background: 'rgba(53, 242, 185, 0.1)', borderRadius: '8px', border: '1px solid rgba(53, 242, 185, 0.2)' }}>
+          <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--green)' }}>META DIÁRIA ATIVA:</span>
+          <span style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--green)' }}>{autonomy.dailyCount}</span>
+        </div>
+      </section>
 
       {/* DASHBOARD DE ANALISE E CONTROLE (WAR ROOM) */}
       <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', marginBottom: 40 }}>
@@ -156,15 +174,31 @@ export default async function AdminPage({ searchParams }: Props) {
             </div>
             <h2 style={{ margin: '8px 0', fontSize: '1.8rem', opacity: autonomy.active ? 1 : 0.6 }}>Inteligencia Autonoma M4</h2>
             <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Este agente monitora o <b>Impacto por Editoria</b> e publica automaticamente nos horarios de pico.</p>
+            
+            {/* MONITOR DE PRODUÇÃO EM TEMPO REAL */}
+            <div style={{ display: 'flex', gap: '20px', marginTop: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.65rem', opacity: 0.6, textTransform: 'uppercase' }}>Em Produção</span>
+                <span style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--cyan)' }}>{allPosts.filter(p => p.status === 'generating').length}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.65rem', opacity: 0.6, textTransform: 'uppercase' }}>Na Fila</span>
+                <span style={{ fontSize: '1.2rem', fontWeight: 900, color: 'white' }}>{allPosts.filter(p => p.status === 'queued').length}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.65rem', opacity: 0.6, textTransform: 'uppercase' }}>Meta Diária</span>
+                <span style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--green)' }}>{autonomy.dailyCount}</span>
+              </div>
+            </div>
           </div>
           <form action={toggleAutonomyAction} style={{ display: 'flex', gap: '24px', alignItems: 'center', justifyContent: 'flex-end' }}>
             <input type="hidden" name="currentStatus" value={String(autonomy.active)} />
             <label className={styles.field} style={{ marginBottom: 0, width: '120px' }}>
-              Posts / Dia
-              <input name="dailyCount" type="number" defaultValue={String(autonomy.dailyCount)} min="1" max="20" />
+              Meta (Posts/Dia)
+              <input name="dailyCount" type="number" defaultValue={String(autonomy.dailyCount)} min="1" max="50" />
             </label>
             <div style={{ textAlign: 'right' }}>
-              <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: 800, marginBottom: 8, color: 'var(--muted)' }}>STATUS DO AGENTE</span>
+              <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: 800, marginBottom: 8, color: 'var(--muted)' }}>SALVAR & ALTERAR STATUS</span>
               <button 
                 className="button" 
                 type="submit" 

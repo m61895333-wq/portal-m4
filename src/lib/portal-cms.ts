@@ -24,17 +24,7 @@ type DbPost = {
 };
 
 function fromDb(row: DbPost): PortalPost {
-  let imageUrl = row.image_url || "";
-  if (imageUrl.includes("source.unsplash.com")) {
-    if (imageUrl.includes("ai") || imageUrl.includes("technology")) 
-      imageUrl = "https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=2000&auto=format&fit=crop";
-    else if (imageUrl.includes("finance") || imageUrl.includes("invest")) 
-      imageUrl = "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2000&auto=format&fit=crop";
-    else if (imageUrl.includes("market") || imageUrl.includes("money")) 
-      imageUrl = "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?q=80&w=2000&auto=format&fit=crop";
-    else 
-      imageUrl = "https://images.unsplash.com/photo-1611974714658-058f40da23fb?q=80&w=2070&auto=format&fit=crop";
-  }
+  const imageUrl = row.image_url || "https://images.unsplash.com/photo-1611974714658-058f40da23fb?q=80&w=2070&auto=format&fit=crop";
 
   return {
     id: row.id,

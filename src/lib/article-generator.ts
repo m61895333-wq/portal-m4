@@ -36,6 +36,15 @@ function pickCategory(input: string) {
   );
 }
 
+function cleanText(text: string) {
+  return text.replace(/\*\*/g, "").replace(/\*/g, "").trim();
+}
+
+function capitalize(text: string) {
+  if (!text) return text;
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 export async function generateEditorialDraft(input: {
   topic?: string;
   sourceUrl?: string;
@@ -47,23 +56,29 @@ export async function generateEditorialDraft(input: {
   
   console.log(`[GERADOR SEQUENCIAL] Iniciando: ${baseTopic}`);
 
-  // 1. ESTRUTURA E CONTEÚDO (CHAMADA ÚNICA PARA VELOCIDADE E RESILIÊNCIA)
+  // 1. ESTRUTURA E CONTEÚDO (PROTOCOLO ZERO-REVIEW)
   const articlePrompt = `
     Aja como Editor-Chefe Sênior do Portal M4. 
-    Assunto: ${baseTopic}
-    Regras de Ouro:
-    1. SEM EMOJIS em nenhuma parte do texto.
-    2. Português do Brasil culto e impecável.
-    3. Tom Premium e Profundidade Total de Mercado.
-    4. Crie pelo menos 3 seções profundas para explorar o tema.
+    Sua missão é produzir um artigo de autoridade máxima pronto para publicação imediata sem revisão humana.
     
-    Escreva o artigo completo com título, resumo e o conteúdo (em Markdown, com subtítulos H2).
+    TEMA: ${baseTopic}
     
-    Retorne EXATAMENTE neste formato JSON, sem crases no inicio ou no fim:
+    DIRETRIZES DE ELITE:
+    1. TOM INSTITUCIONAL: Use estritamente a 3ª pessoa. Proibido "eu" ou "nós". Use "O Portal M4 analisa...", "Observa-se no mercado...".
+    2. PROFUNDIDADE TÉCNICA: Mínimo de 1200 palavras. Explore ramificações econômicas e tecnológicas.
+    3. VALIDAÇÃO DE DADOS: Cite fontes reais (Bloomberg, Forbes, Relatórios Governamentais, Gartner) para embasar argumentos.
+    4. ZERO EMOJIS e ZERO CARACTERES ESPECIAIS decorativos.
+    5. FORMATAÇÃO REDATORIAL: 
+       - Lead impactante (O que? Por que importa?).
+       - Subtítulos H2 claros e profissionais.
+       - Conclusão com "Visão M4" (projeção de futuro).
+    6. ANTI-AI-ISMS: Proibido frases como "Neste artigo vamos...", "Em conclusão...", "Espero que isso ajude". Vá direto ao ponto.
+    
+    ESTRUTURA JSON (SEM CRASES):
     {
-      "title": "Titulo de autoridade (SEM EMOJIS)",
-      "excerpt": "Resumo persuasivo (SEM EMOJIS)",
-      "content": "## Secao 1\\n\\nConteudo da secao 1...\\n\\n## Secao 2\\n\\nConteudo da secao 2..."
+      "title": "Titulo de Autoridade Limpo",
+      "excerpt": "Resumo executivo profissional com dados",
+      "content": "## O Cenário Atual\\n\\n[Conteúdo...]\\n\\n## Análise de Dados e Fontes\\n\\n[Conteúdo com citações...]\\n\\n## Visão M4\\n\\n[Projeção estratégica...]"
     }
   `;
 
@@ -84,13 +99,14 @@ export async function generateEditorialDraft(input: {
 
   // 3. FINALIZAÇÃO E VALIDAÇÃO DE IMAGEM
   const fullContent = articleData.content;
-  const structure = { title: articleData.title, excerpt: articleData.excerpt };
-  const slug = `${slugify(structure.title)}-${Date.now()}`;
+  const cleanTitle = capitalize(cleanText(articleData.title));
+  const cleanExcerpt = cleanText(articleData.excerpt);
+  const slug = `${slugify(cleanTitle)}-${Date.now()}`;
 
   return {
     slug,
-    title: structure.title,
-    excerpt: structure.excerpt,
+    title: cleanTitle,
+    excerpt: cleanExcerpt,
     content: fullContent,
     category: category.slug,
     imageUrl: realisticImages[category.slug] || realisticImages["mercado-financeiro"],

@@ -21,6 +21,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: "Agente de Autonomia esta DESLIGADO." });
     }
 
+    // REGRA MARCO: Verificar se ja existe algo na fila (foco total)
+    const currentQueue = await listPosts("all");
+    const activeTasks = currentQueue.filter(p => p.status === 'queued' || p.status === 'generating');
+    
+    if (activeTasks.length > 0) {
+      return NextResponse.json({ message: "Agente aguardando a finalizacao da fila atual para respeitar o foco total." });
+    }
+
     // 2. Decisao de Pauta (Impacto vs Fallback)
     const performance = await getPerformance("week");
     let targetTopic = "Tendencias de Mercado e IA";
