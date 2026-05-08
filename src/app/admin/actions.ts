@@ -214,3 +214,17 @@ export async function removeTagAction(formData: FormData) {
   await removeTopicTag(String(formData.get("tag") ?? ""));
   revalidatePortal();
 }
+
+/**
+ * recordHitAction
+ * Registra uma visita de página de forma segura via Server Action.
+ */
+export async function recordHitAction(path: string) {
+  try {
+    await recordPageView(path);
+    return { success: true };
+  } catch (err) {
+    console.error("[HIT] Erro ao registrar:", err);
+    return { success: false };
+  }
+}

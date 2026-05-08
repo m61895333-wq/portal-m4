@@ -2,16 +2,14 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { recordPageView } from "@/lib/portal-cms";
+import { recordHitAction } from "./admin/actions";
 
 export function HitTracker() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Registramos o hit toda vez que o caminho da URL mudar
-    if (typeof window !== "undefined") {
-      recordPageView(pathname).catch(console.error);
-    }
+    // Registramos o hit toda vez que o caminho da URL mudar via Server Action
+    recordHitAction(pathname);
   }, [pathname]);
 
   return null;
