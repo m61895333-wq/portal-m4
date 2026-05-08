@@ -188,30 +188,50 @@ export async function createDraft(input: { topic?: string; sourceUrl?: string; a
  * createQueuedPost (Modo Artesão)
  * Adiciona um novo tópico à fila. O Agente (VPS 8GB) processará este item
  * de forma autônoma e gerará um conteúdo profundo de 16k tokens.
+ * 
+ * REGRA ANTI-DUPLICAÇÃO: Verifica se já existe artigo com título similar
+ * antes de enfileirar. Lança erro se detectar duplicata.
  */
 export async function createQueuedPost(input: { topic: string; scheduledAt?: string }) {
   if (!hasSupabaseConfig()) throw new Error("Supabase não configurado.");
+
+  // CURADORIA: Normaliza o tópico para comparação (remove acentos e lowercase)
+  const normalizedTopic = input.topic
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
   
+  // Pega as primeiras 40 letras significativas para comparação fuzzy
+  const searchKey = normalizedTopic.replace(/[^a-z0-9 ]/g, "").slice(0, 40).trim();
+
+  // VERIFICAÇÃO DE DUPLICATA: busca posts com título parecido nos últimos 30 dias
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: existingPosts } = await getSupabaseAdmin()
+    .from("portal_posts")
+    .select("id, title, status")
+    .ilike("title", `%${searchKey.slice(0, 25)}%`)
+    .gte("created_at", thirtyDaysAgo)
+    .limit(3);
+
+  if (existingPosts && existingPosts.length > 0) {
+    const dupe = existingPosts[0];
+    throw new Error(
+      `CURADORIA M4: Artigo similar já existe na base (${dupe.status.toUpperCase()}): "${dupe.title}". Tente um ângulo diferente ou tema mais específico.`
+    );
+  }
+
   // Criamos um esqueleto do post. O Agente na VPS preencherá o conteúdo e o excerpt.
   const slug = `pauta-${Date.now()}-${input.topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50)}`;
-  
-  // Galeria Curada M4 para novos artigos
-  const premiumPhotos = [
-    "photo-1519389950473-47ba0277781c", "photo-1485827404703-89b55fcc595e", 
-    "photo-1460925895917-afdab827c52f", "photo-1590283603385-17ffb3a7f29f",
-    "photo-1677442136019-21780ecad995", "photo-1620712943543-bcc4628c9759"
-  ];
-  const randomPhoto = premiumPhotos[Math.floor(Math.random() * premiumPhotos.length)];
 
   const postData = {
     title: input.topic,
     slug: slug,
     content: "Gerando conteúdo na VPS...",
     excerpt: "Aguardando processamento da IA na VPS...",
-    category: "GERAL", 
+    category: "GERAL",
     status: "queued" as PostStatus,
     priority: 1,
-    imageUrl: `https://images.unsplash.com/${randomPhoto}?auto=format&fit=crop&w=1400&q=80`,
+    imageUrl: null,
     scheduledAt: input.scheduledAt,
     isActive: true
   };

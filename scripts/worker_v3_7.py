@@ -73,8 +73,33 @@ def get_today_count():
     except:
         return 0
 
-def generate_auto_topic():
-    tags = ["Mercado Financeiro", "Inteligência Artificial", "Investimentos", "Tecnologia", "Empreendedorismo"]
+def get_recent_titles(limit=30):
+    """Busca os títulos mais recentes para evitar repetição."""
+    try:
+        res = supabase.table('portal_posts').select('title').order('created_at', desc=True).limit(limit).execute()
+        return [row['title'] for row in (res.data or [])]
+    except:
+        return []
+
+def title_already_exists(title, recent_titles):
+    """Verifica se o título (ou algo muito parecido) já existe."""
+    title_lower = title.lower().strip()
+    for existing in recent_titles:
+        existing_lower = existing.lower().strip()
+        # Compara os primeiros 30 caracteres para detectar duplicatas óbvias
+        if title_lower[:30] == existing_lower[:30]:
+            return True
+        # Detecta sobreposição alta de palavras
+        words_new = set(title_lower.split())
+        words_old = set(existing_lower.split())
+        if len(words_new) > 3 and words_new & words_old:
+            overlap = len(words_new & words_old) / len(words_new | words_old)
+            if overlap > 0.65:
+                return True
+    return False
+
+def generate_auto_topic(recent_titles):
+    tags = ["Mercado Financeiro", "Inteligência Artificial", "Investimentos", "Tecnologia", "Empreendedorismo", "Carreira", "Economia Digital", "Criptoativos", "Startups"]
     try:
         tags_res = supabase.table('portal_settings').select('*').eq('key', 'topic_tags').execute()
         if tags_res.data:
@@ -83,8 +108,28 @@ def generate_auto_topic():
         pass
     
     base_tag = random.choice(tags)
-    prompt = f"Como Editor-Chefe do Portal M4, crie um título de artigo de alto impacto sobre {base_tag}. Responda apenas o título."
-    return generate_content(prompt) or f"Tendências Globais: O Futuro de {base_tag}"
+    
+    # Passa os últimos 10 títulos para a IA evitar repetição
+    forbidden = "\n".join(f"- {t}" for t in recent_titles[:10]) if recent_titles else "Nenhum ainda."
+    
+    prompt = f"""Você é o Editor-Chefe do Portal M4, especialista em finanças, tecnologia e mercado.
+Crie UM ÚNICO título de artigo jornalístico ORIGINAL e EXCLUSIVO sobre o tema: {base_tag}.
+
+REGRA ABSOLUTA: O título DEVE SER COMPLETAMENTE DIFERENTE dos títulos abaixo (que já foram publicados):
+{forbidden}
+
+CRITÉRIOS:
+- Título jornalístico de alto impacto (estilo Bloomberg/Forbes)
+- Específico e com dados/contexto (ex: "Selic a 14,75%: o que muda para fundos e CDBs em 2026")
+- Máximo 120 caracteres
+- Em português do Brasil
+- SEM aspas na resposta
+
+Responda APENAS o título, sem explicações."""
+    
+    new_title = generate_content(prompt) or f"Análise Exclusiva: O Futuro de {base_tag} em 2026"
+    # Remove aspas que a IA possa inserir
+    return new_title.strip().strip('"').strip("'")
 
 def process_queue():
     # 1. Prioridade total para a fila manual
@@ -99,16 +144,33 @@ def process_queue():
             if is_in_working_window(config):
                 count = get_today_count()
                 if count < config.get('dailyCount', 5):
-                    print(f'>>> CRONOGRAMA ATIVO: Gerando pauta ({count+1}/{config["dailyCount"]})')
-                    new_topic = generate_auto_topic()
-                    slug = f"auto-{int(time.time())}-{new_topic.lower().replace(' ', '-')[:50]}"
+                    # CARREGA TÍTULOS RECENTES PARA CURADORIA
+                    recent_titles = get_recent_titles(30)
+                    
+                    # Tenta gerar um título único (até 3 tentativas)
+                    new_topic = None
+                    for attempt in range(3):
+                        candidate = generate_auto_topic(recent_titles)
+                        if not title_already_exists(candidate, recent_titles):
+                            new_topic = candidate
+                            break
+                        print(f">>> CURADORIA: Título duplicado na tentativa {attempt+1}, regerando...")
+                    
+                    if not new_topic:
+                        print(">>> CURADORIA: Impossível gerar título único após 3 tentativas. Pulando ciclo.")
+                        return
+                    
+                    print(f'>>> CRONOGRAMA ATIVO: Gerando pauta ({count+1}/{config["dailyCount"]}): {new_topic}')
+                    slug = f"auto-{int(time.time())}-{new_topic.lower()[:50].replace(' ', '-')}"
                     
                     ins = supabase.table('portal_posts').insert({
                         'title': new_topic,
                         'slug': slug,
                         'status': 'generating',
                         'content': 'Gerando via Cronograma Autonomo...',
-                        'category': 'GERAL'
+                        'excerpt': 'Aguardando IA...',
+                        'category': 'GERAL',
+                        'is_active': True
                     }).execute()
                     if ins.data:
                         posts = ins.data
