@@ -60,6 +60,28 @@ export async function savePostAction(formData: FormData) {
   else redirect("/admin?erro=salvamento&msg=" + encodeURIComponent(errorMsg));
 }
 
+export async function createSingleDraftAction(formData: FormData) {
+  const topic = formData.get("topic") as string;
+  const sourceUrl = formData.get("sourceUrl") as string;
+  const approach = formData.get("approach") as string;
+  const scheduledAt = formData.get("scheduledAt") as string;
+  const index = formData.get("index") as string;
+
+  const finalTopic = topic || sourceUrl || "Tendências de Mercado";
+
+  try {
+    const result = await createQueuedPost({
+      topic: finalTopic,
+      scheduledAt
+    });
+    return { success: true, id: result.id };
+  } catch (err: any) {
+    console.error(`[ESTEIRA] Falha ao enfileirar artigo ${index}:`, err);
+    return { success: false, error: err.message || "Erro ao conectar com a fila da VPS." };
+  }
+}
+
+
 export async function setStatusAction(formData: FormData) {
   const id = String(formData.get("id"));
   const status = String(formData.get("status")) as PostStatus;
