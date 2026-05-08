@@ -277,7 +277,12 @@ export async function removeTopicTag(tag: string) {
 
 export async function getAutonomyStatus() {
   noStore();
-  if (!hasSupabaseConfig()) return { active: true, dailyCount: 5 };
+  if (!hasSupabaseConfig()) return { 
+    active: false, 
+    dailyCount: 5, 
+    startTime: "08:00", 
+    activeDays: ["seg", "ter", "qua", "qui", "sex"] 
+  };
   
   try {
     const { data } = await getSupabaseAdmin()
