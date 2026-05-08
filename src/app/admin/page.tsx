@@ -197,13 +197,60 @@ export default async function AdminPage({ searchParams }: Props) {
               </div>
             </div>
           </div>
-          <form action={toggleAutonomyAction} style={{ display: 'flex', gap: '24px', alignItems: 'center', justifyContent: 'flex-end' }}>
+          <form action={toggleAutonomyAction} style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'flex-end' }}>
             <input type="hidden" name="currentStatus" value={String(autonomy.active)} />
-            <label className={styles.field} style={{ marginBottom: 0, width: '120px' }}>
-              Meta (Posts/Dia)
-              <input name="dailyCount" type="number" defaultValue={String(autonomy.dailyCount)} min="1" max="50" />
-            </label>
-            <div style={{ textAlign: 'right' }}>
+            
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+               <label className={styles.field} style={{ marginBottom: 0, width: '120px' }}>
+                  Meta (Posts/Dia)
+                  <input name="dailyCount" type="number" defaultValue={String(autonomy.dailyCount ?? 5)} min="1" max="100" />
+               </label>
+               <label className={styles.field} style={{ marginBottom: 0, width: '120px' }}>
+                  Hora de Início
+                  <input name="startTime" type="time" defaultValue={autonomy.startTime ?? "08:00"} />
+               </label>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+               <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--muted)' }}>DIAS DE OPERAÇÃO</span>
+               <div style={{ display: 'flex', gap: '8px' }}>
+                  {[
+                    { key: 'seg', label: 'S' },
+                    { key: 'ter', label: 'T' },
+                    { key: 'qua', label: 'Q' },
+                    { key: 'qui', label: 'Q' },
+                    { key: 'sex', label: 'S' },
+                    { key: 'sab', label: 'S' },
+                    { key: 'dom', label: 'D' }
+                  ].map((day) => (
+                    <label key={day.key} style={{ cursor: 'pointer' }}>
+                      <input 
+                        type="checkbox" 
+                        name="activeDays" 
+                        value={day.key} 
+                        defaultChecked={autonomy.activeDays?.includes(day.key) ?? true} 
+                        style={{ display: 'none' }}
+                      />
+                      <div className="daySelector" style={{ 
+                        width: '32px', 
+                        height: '32px', 
+                        borderRadius: '8px', 
+                        border: '1px solid var(--line)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.75rem',
+                        fontWeight: 900,
+                        transition: '0.2s'
+                      }}>
+                        {day.label}
+                      </div>
+                    </label>
+                  ))}
+               </div>
+            </div>
+
+            <div style={{ textAlign: 'right', marginTop: 8 }}>
               <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: 800, marginBottom: 8, color: 'var(--muted)' }}>SALVAR & ALTERAR STATUS</span>
               <button 
                 className="button" 

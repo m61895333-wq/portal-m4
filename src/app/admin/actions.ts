@@ -178,13 +178,20 @@ export async function remakeImageAction(formData: FormData) {
  * REGRA: Este agente monitora o impacto e publica sozinho nos horarios de pico.
  */
 export async function toggleAutonomyAction(formData: FormData) {
-  const currentStatus = formData.get("currentStatus") === "true";
-  // Se clicou no botão, inverte o status. Se apenas mudou o número, mantém o status.
-  const nextStatus = !currentStatus;
-  const count = Number(formData.get("dailyCount") ?? 5);
-  
-  await setAutonomyStatus(nextStatus, count);
-  revalidatePortal();
+  try {
+    const currentStatus = formData.get("currentStatus") === "true";
+    const nextStatus = !currentStatus;
+    
+    const dailyCount = Number(formData.get("dailyCount") ?? 5);
+    const startTime = String(formData.get("startTime") ?? "08:00");
+    const activeDays = formData.getAll("activeDays") as string[];
+
+    await setAutonomyStatus(nextStatus, dailyCount, startTime, activeDays);
+    revalidatePortal();
+  } catch (err: any) {
+    console.error("[AUTONOMIA] Erro ao configurar agente:", err);
+    redirect(`/admin?erro=autonomia&msg=${encodeURIComponent(err.message)}`);
+  }
 }
 
 export async function addTagAction(formData: FormData) {

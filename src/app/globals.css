@@ -471,3 +471,20 @@ select {
     display: none;
   }
 }
+/* Estilo para seletores de dias da semana */
+.daySelector {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+}
+
+.daySelector:hover {
+  border-color: var(--cyan);
+  color: white;
+}
+
+input[type="checkbox"]:checked + .daySelector {
+  background: var(--cyan);
+  color: black;
+  border-color: var(--cyan);
+  box-shadow: 0 0 15px rgba(32, 217, 255, 0.3);
+}

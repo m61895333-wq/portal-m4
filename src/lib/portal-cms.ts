@@ -287,21 +287,31 @@ export async function getAutonomyStatus() {
       .single();
       
     if (data && (data as any).value) {
-      return (data as any).value as { active: boolean, dailyCount: number };
+      return (data as any).value as { 
+        active: boolean, 
+        dailyCount: number,
+        startTime: string,
+        activeDays: string[]
+      };
     }
   } catch(e) {
     console.error("Erro lendo autonomy:", e);
   }
   
-  return { active: false, dailyCount: 5 };
+  return { 
+    active: false, 
+    dailyCount: 5, 
+    startTime: "08:00", 
+    activeDays: ["seg", "ter", "qua", "qui", "sex"] 
+  };
 }
 
-export async function setAutonomyStatus(active: boolean, dailyCount: number) {
+export async function setAutonomyStatus(active: boolean, dailyCount: number, startTime: string, activeDays: string[]) {
   if (!hasSupabaseConfig()) return;
-  console.log(`[CMS] Atualizando Agente no DB: ${active ? 'LIGADO' : 'DESLIGADO'}, Meta: ${dailyCount}`);
+  console.log(`[CMS] Atualizando Agente: ${active ? 'LIGADO' : 'DESLIGADO'}, Meta: ${dailyCount}, Início: ${startTime}`);
   await getSupabaseAdmin()
     .from("portal_settings")
-    .upsert({ key: "autonomy", value: { active, dailyCount } } as never);
+    .upsert({ key: "autonomy", value: { active, dailyCount, startTime, activeDays } } as never);
 }
 
 export async function getPerformance(period: "week" | "month" = "week"): Promise<PerformanceSummary> {
