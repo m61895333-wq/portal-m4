@@ -89,6 +89,7 @@ export function Footer() {
           <Link href="https://m4games.com.br">M4 Games</Link>
           <Link href="https://grupom4.com">Grupo M4</Link>
           <Link href="mailto:contato@portalm4.com.br">contato@portalm4.com.br</Link>
+          <Link href="mailto:admin@portalm4.com.br">admin@portalm4.com.br</Link>
         </div>
       </div>
     </footer>

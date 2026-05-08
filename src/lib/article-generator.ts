@@ -76,10 +76,12 @@ export async function generateEditorialDraft(input: {
     
     ESTRUTURA JSON (SEM CRASES):
     {
-      "title": "Titulo de Autoridade Limpo",
-      "excerpt": "Resumo executivo profissional com dados",
-      "content": "## O Cenário Atual\\n\\n[Conteúdo...]\\n\\n## Análise de Dados e Fontes\\n\\n[Conteúdo com citações...]\\n\\n## Visão M4\\n\\n[Projeção estratégica...]"
+      "content": "## O Cenário Atual\\n\\n[Conteúdo...]\\n\\n## Análise de Dados e Fontes\\n\\n[Conteúdo com citações...]\\n\\n## Visão M4\\n\\n[Projeção estratégica...]\\n\\n[ESPAÇO DUPLO]\\n\\n[MÍNIMO 10 HASHTAGS]\\n\\n[MÍNIMO 10 PALAVRAS-CHAVE ESTRATÉGICAS]"
     }
+    
+    CRÍTICO: No final de todo o texto (após as fontes), insira um ESPAÇO DUPLO e adicione:
+    1. Exatamente 10 Hashtags (ex: #MercadoFinanceiro #IA) relevantes.
+    2. Exatamente 10 Palavras-chave separadas por vírgula (ex: Investimento, Tecnologia) relevantes.
   `;
 
   const res = await model.generateContent(articlePrompt);

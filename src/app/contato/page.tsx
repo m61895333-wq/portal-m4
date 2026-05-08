@@ -1,4 +1,5 @@
 import { Footer, Header, Sidebar } from "../site-shell";
+import { ContactForm } from "./contact-form";
 
 export default function ContactPage() {
   return (
@@ -16,66 +17,7 @@ export default function ContactPage() {
               Nossa equipe editorial esta pronta para te ouvir.
             </p>
 
-            <form className="card" style={{ padding: 40, textAlign: 'left', maxWidth: 600, margin: '0 auto' }}>
-              <div style={{ marginBottom: 24 }}>
-                <label style={{ display: 'block', marginBottom: 8, fontSize: '0.9rem', fontWeight: 700, color: 'var(--cyan)' }}>
-                  Nome Completo
-                </label>
-                <input 
-                  type="text" 
-                  placeholder="Seu nome..."
-                  style={{ 
-                    width: '100%', 
-                    padding: '14px', 
-                    background: 'rgba(255,255,255,0.03)', 
-                    border: '1px solid var(--line)', 
-                    borderRadius: 12,
-                    color: 'white'
-                  }} 
-                />
-              </div>
-
-              <div style={{ marginBottom: 24 }}>
-                <label style={{ display: 'block', marginBottom: 8, fontSize: '0.9rem', fontWeight: 700, color: 'var(--cyan)' }}>
-                  E-mail Profissional
-                </label>
-                <input 
-                  type="email" 
-                  placeholder="seu@email.com"
-                  style={{ 
-                    width: '100%', 
-                    padding: '14px', 
-                    background: 'rgba(255,255,255,0.03)', 
-                    border: '1px solid var(--line)', 
-                    borderRadius: 12,
-                    color: 'white'
-                  }} 
-                />
-              </div>
-
-              <div style={{ marginBottom: 32 }}>
-                <label style={{ display: 'block', marginBottom: 8, fontSize: '0.9rem', fontWeight: 700, color: 'var(--cyan)' }}>
-                  Mensagem
-                </label>
-                <textarea 
-                  rows={5}
-                  placeholder="Como podemos ajudar?"
-                  style={{ 
-                    width: '100%', 
-                    padding: '14px', 
-                    background: 'rgba(255,255,255,0.03)', 
-                    border: '1px solid var(--line)', 
-                    borderRadius: 12,
-                    color: 'white',
-                    resize: 'none'
-                  }} 
-                ></textarea>
-              </div>
-
-              <button className="button" style={{ width: '100%', padding: 16 }}>
-                Enviar Mensagem
-              </button>
-            </form>
+            <ContactForm />
 
             <div style={{ marginTop: 48, paddingTop: 48, borderTop: '1px solid var(--line)' }}>
               <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: 8 }}>Preferir enviar um e-mail direto?</p>

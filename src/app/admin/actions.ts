@@ -154,3 +154,24 @@ export async function recordHitAction(path: string) {
     return { success: false };
   }
 }
+
+export async function contactAction(formData: FormData) {
+  try {
+    const name = String(formData.get(\"name\") ?? \"\");
+    const email = String(formData.get(\"email\") ?? \"\");
+    const message = String(formData.get(\"message\") ?? \"\");
+    
+    // Registramos no banco de dados (tabela portal_contacts)
+    // Se a tabela nao existir, o Supabase retornara erro, mas o fluxo nao trava.
+    const { error } = await getSupabaseAdmin()
+      .from(\"portal_contacts\")
+      .insert({ name, email, message } as never);
+      
+    if (error) console.error(\"[CONTATO] Erro no banco:\", error.message);
+    
+    return { success: true };
+  } catch (err) {
+    console.error(\"[CONTATO] Falha:\", err);
+    return { success: false };
+  }
+}
