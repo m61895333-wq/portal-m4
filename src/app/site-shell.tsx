@@ -13,7 +13,15 @@ export async function Sidebar() {
         <span>Portal M4</span>
       </Link>
 
-      <div style={{ flex: 1 }} />
+      <nav className="sidebarMenu" style={{ marginTop: '20px', padding: '0 12px', flex: 1 }}>
+        <span style={{ display: 'block', fontSize: '0.65rem', fontWeight: 800, color: 'var(--muted)', letterSpacing: '0.1em', marginBottom: '16px', paddingLeft: '14px', textTransform: 'uppercase' }}>Editorias</span>
+        {categories.map((category) => (
+          <Link key={category.slug} href={`/categoria/${category.slug}`} className="sidebarLink" style={{ padding: '12px 14px' }}>
+            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: category.accent }} />
+            {category.name}
+          </Link>
+        ))}
+      </nav>
 
       <div className="sidebarStats" style={{ padding: '24px', borderTop: '1px solid var(--line)' }}>
         <div className="statsCard" style={{ background: 'linear-gradient(135deg, rgba(32, 217, 255, 0.08), rgba(53, 242, 185, 0.08))', padding: '20px', borderRadius: '12px', border: '1px solid var(--line)' }}>
