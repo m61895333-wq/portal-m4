@@ -2,7 +2,7 @@ import time
 import requests
 import json
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from supabase import create_client
 
 # CONFIGURACOES M4
@@ -42,7 +42,9 @@ def get_autonomy_config():
     return {"active": False, "dailyCount": 5, "startTime": "08:00", "activeDays": ["seg", "ter", "qua", "qui", "sex"]}
 
 def is_in_working_window(config):
-    now = datetime.now() # Usa hora local do servidor (VPS)
+    # Força horário de Brasília (UTC-3)
+    br_tz = timezone(timedelta(hours=-3))
+    now = datetime.now(br_tz)
     
     # 1. Verifica Dia da Semana
     days_map = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"]
@@ -133,9 +135,12 @@ def process_queue():
         content = generate_content(prompt)
         
         if content:
-            image_prompt = f"3 keywords em inglês para imagem deste tema '{topic}':"
-            visual_keywords = generate_content(image_prompt) or "business,technology"
-            image_url = f"https://loremflickr.com/1400/800/{visual_keywords.strip().replace(' ', '')}/all?lock={int(time.time())}"
+            # Novo motor de imagens: Pollinations.ai (Conceitual sem pessoas)
+            import urllib.parse
+            clean_topic = ''.join(c for c in topic if c.isalnum() or c.isspace())
+            prompt_img = f"Abstract conceptual 3d render about {clean_topic}, corporate business style, dark premium background, neon lights, no faces, no people, highly detailed, 8k"
+            encoded_prompt = urllib.parse.quote(prompt_img)
+            image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1400&height=800&nologo=true&seed={int(time.time())}"
 
             cat_prompt = f"Qual categoria: MERCADO FINANCEIRO, INVESTIMENTOS, INTELIGENCIA ARTIFICIAL, TECNOLOGIA, CARREIRA, EMPREENDEDORISMO? Responda uma."
             category = generate_content(cat_prompt) or "TECNOLOGIA"

@@ -115,23 +115,26 @@ export async function remakePostAction(formData: FormData) {
 
 export async function remakeImageAction(formData: FormData) {
   const id = String(formData.get("id"));
-  const premiumPhotos = [
-    "photo-1519389950473-47ba0277781c", "photo-1485827404703-89b55fcc595e", 
-    "photo-1460925895917-afdab827c52f", "photo-1590283603385-17ffb3a7f29f",
-    "photo-1677442136019-21780ecad995", "photo-1620712943543-bcc4628c9759",
-    "photo-1642790106117-e829e14a795f", "photo-1556761175-b413da4baf72",
-    "photo-1554224155-6726b3ff858f", "photo-1552664730-d307ca884978"
-  ];
-  const randomPhoto = premiumPhotos[Math.floor(Math.random() * premiumPhotos.length)];
-  const actualUrl = `https://images.unsplash.com/${randomPhoto}?auto=format&fit=crop&w=1400&q=80`;
+  const title = String(formData.get("title") || "tecnologia");
+  
+  // Extrai as palavras principais do título em português
+  const cleanTitle = title.replace(/[^a-zA-ZÀ-ÿ0-9 ]/g, "").split(" ").filter(w => w.length > 2).slice(0, 4).join(" ");
+  
+  // Prompt de engenharia para a IA gerar uma imagem 100% conceitual
+  const prompt = encodeURIComponent(`Abstract conceptual 3d render about ${cleanTitle}, corporate business style, dark premium background, neon lights, no faces, no people, highly detailed, 8k`);
+  
+  // Usa o Pollinations com seed baseada no tempo para garantir imagem única
+  const actualUrl = `https://image.pollinations.ai/prompt/${prompt}?width=1400&height=800&nologo=true&seed=${Date.now()}`;
+  
   await updatePost(id, { imageUrl: actualUrl });
   revalidatePortal();
 }
 
 export async function toggleAutonomyAction(formData: FormData) {
   try {
+    const actionType = formData.get("actionType");
     const currentStatus = formData.get("currentStatus") === "true";
-    const nextStatus = !currentStatus;
+    const nextStatus = actionType === "toggle" ? !currentStatus : currentStatus;
     const dailyCount = Number(formData.get("dailyCount") || 5);
     const startTime = String(formData.get("startTime") || "08:00");
     const activeDays = formData.getAll("activeDays") as string[];
