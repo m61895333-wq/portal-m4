@@ -13,39 +13,13 @@ export async function Sidebar() {
         <span>Portal M4</span>
       </Link>
 
-      <nav className="sidebarMenu">
-        <span className="statsLabel" style={{ marginLeft: '18px', marginBottom: '8px', display: 'block' }}>Editorias</span>
-        {categories.map((category) => (
-          <Link key={category.slug} href={`/categoria/${category.slug}`} className="sidebarLink">
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: category.accent }} />
-            {category.name}
-          </Link>
-        ))}
+      <div style={{ flex: 1 }} />
 
-        <div style={{ marginTop: '32px' }}>
-          <span className="statsLabel" style={{ marginLeft: '18px', marginBottom: '16px', display: 'block' }}>Em Alta</span>
-          {perf.mostReadPosts.map((post, idx) => (
-            <Link key={post.slug} href={`/artigo/${post.slug}`} className="sidebarLink" style={{ alignItems: 'flex-start', gap: '12px', padding: '10px 18px' }}>
-              <span style={{ fontSize: '0.7rem', color: 'var(--cyan)', fontWeight: 900, marginTop: '2px' }}>{(idx + 1).toString().padStart(2, '0')}</span>
-              <span style={{ fontSize: '0.85rem', lineHeight: '1.4', fontWeight: 500 }}>{post.title}</span>
-            </Link>
-          ))}
-        </div>
-
-        <div style={{ marginTop: '32px' }}>
-          <span className="statsLabel" style={{ marginLeft: '18px', marginBottom: '16px', display: 'block' }}>Novidades</span>
-          {perf.recentPosts.map((post) => (
-            <Link key={`rec-${post.slug}`} href={`/artigo/${post.slug}`} className="sidebarLink" style={{ padding: '10px 18px' }}>
-              <span style={{ fontSize: '0.85rem', lineHeight: '1.4', fontWeight: 500 }}>{post.title}</span>
-            </Link>
-          ))}
-        </div>
-      </nav>
-
-      <div className="sidebarStats">
-        <div className="statsCard">
-          <span className="statsValue">{perf.absoluteTotal.toLocaleString('pt-BR')}</span>
-          <span className="statsLabel">Acessos Totais</span>
+      <div className="sidebarStats" style={{ padding: '40px 24px', borderTop: '1px solid var(--line)' }}>
+        <div className="statsCard" style={{ background: 'linear-gradient(135deg, rgba(32, 217, 255, 0.1), rgba(53, 242, 185, 0.1))', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: 800, color: 'var(--cyan)', letterSpacing: '0.1em', marginBottom: '8px', textTransform: 'uppercase' }}>Impacto Global M4</span>
+          <span className="statsValue" style={{ fontSize: '1.8rem', fontWeight: 900, color: 'white' }}>{perf.absoluteTotal.toLocaleString('pt-BR')}</span>
+          <span className="statsLabel" style={{ display: 'block', fontSize: '0.75rem', opacity: 0.6, marginTop: '4px' }}>Acessos Registrados</span>
         </div>
       </div>
     </aside>
