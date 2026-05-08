@@ -176,9 +176,9 @@ export default async function AdminPage({ searchParams }: Props) {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                <span style={{ width: 10, height: 10, borderRadius: '50%', background: autonomy.active ? 'var(--green)' : 'var(--muted)', boxShadow: autonomy.active ? '0 0 10px var(--green)' : 'none' }}></span>
-               <span className={styles.eyebrow} style={{ color: autonomy.active ? 'var(--green)' : 'var(--muted)' }}>Agente de Autonomia Total (BETA)</span>
+               <span className={styles.eyebrow} style={{ color: autonomy.active ? 'var(--green)' : 'var(--muted)' }}>CENTRAL DE COMANDO M4 (v3.7)</span>
             </div>
-            <h2 style={{ margin: '8px 0', fontSize: '1.8rem', opacity: autonomy.active ? 1 : 0.6 }}>Inteligencia Autonoma M4</h2>
+            <h2 style={{ margin: '8px 0', fontSize: '1.8rem', opacity: autonomy.active ? 1 : 0.6 }}>Controle Cronometrado M4</h2>
             <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Este agente monitora o <b>Impacto por Editoria</b> e publica automaticamente nos horarios de pico.</p>
             
             {/* MONITOR DE PRODUÇÃO EM TEMPO REAL */}
