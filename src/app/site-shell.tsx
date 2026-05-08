@@ -21,7 +21,7 @@ export async function Sidebar() {
       <nav className="sidebarMenu" style={{ marginTop: '20px', padding: '0 12px', flex: 1 }}>
         <span style={{ display: 'block', fontSize: '0.65rem', fontWeight: 800, color: 'var(--muted)', letterSpacing: '0.1em', marginBottom: '16px', paddingLeft: '14px', textTransform: 'uppercase' }}>Editorias</span>
         {categories.map((category) => (
-          <Link key={category.slug} href={`/categoria/${category.slug}`} className="sidebarLink" style={{ padding: '12px 14px' }}>
+          <Link key={category.slug} href={`/categoria/${category.slug}`} className="sidebarLink" style={{ padding: '6px 14px' }}>
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: category.accent }} />
             {category.name}
           </Link>
