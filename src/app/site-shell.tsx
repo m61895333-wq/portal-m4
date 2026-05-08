@@ -24,12 +24,14 @@ export async function Sidebar() {
       </nav>
 
       <div className="sidebarStats" style={{ padding: '24px', borderTop: '1px solid var(--line)' }}>
-        <div className="statsCard" style={{ background: 'linear-gradient(135deg, rgba(32, 217, 255, 0.08), rgba(53, 242, 185, 0.08))', padding: '20px', borderRadius: '12px', border: '1px solid var(--line)' }}>
-          <span style={{ display: 'block', fontSize: '0.6rem', fontWeight: 800, color: 'var(--cyan)', letterSpacing: '0.1em', marginBottom: '8px', textTransform: 'uppercase' }}>Impacto M4</span>
+        <div className="statsCard" style={{ background: 'linear-gradient(135deg, rgba(32, 217, 255, 0.1), rgba(53, 242, 185, 0.1))', padding: '20px', borderRadius: '14px', border: '1px solid var(--line)', display: 'block', opacity: 1 }}>
+          <span style={{ display: 'block', fontSize: '0.6rem', fontWeight: 900, color: 'var(--cyan)', letterSpacing: '0.15em', marginBottom: '8px', textTransform: 'uppercase' }}>Impacto Global M4</span>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-            <span style={{ fontSize: '1.6rem', fontWeight: 900, color: 'white' }}>{perf.absoluteTotal.toLocaleString('pt-BR')}</span>
-            <span style={{ fontSize: '0.65rem', opacity: 0.5, textTransform: 'uppercase' }}>Leituras</span>
+            <span style={{ fontSize: '1.8rem', fontWeight: 900, color: 'white' }}>{perf.absoluteTotal.toLocaleString('pt-BR')}</span>
+            <span style={{ fontSize: '0.65rem', opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Acessos Reais</span>
           </div>
+          <div style={{ marginTop: '12px', height: '2px', background: 'var(--line)', width: '100%' }} />
+          <p style={{ margin: '8px 0 0', fontSize: '0.6rem', color: 'var(--muted)', lineHeight: '1.4' }}>Contabilizando Home, Categorias e Artigos em tempo real.</p>
         </div>
       </div>
     </aside>

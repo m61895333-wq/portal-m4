@@ -226,6 +226,11 @@ export async function recordPostView(postId: string) {
   await getSupabaseAdmin().from("portal_post_views").insert({ post_id: postId } as never);
 }
 
+export async function recordPageView(path: string) {
+  if (!hasSupabaseConfig()) return;
+  await getSupabaseAdmin().from("portal_page_views").insert({ path: path } as never);
+}
+
 export async function listTopicTags() {
   noStore();
   if (!hasSupabaseConfig()) return [];
@@ -351,13 +356,12 @@ export async function getPerformance(period: "week" | "month" = "week"): Promise
     }
   }
 
-  const { data: absoluteData } = await getSupabaseAdmin().from("portal_post_views").select("id", { count: "exact", head: true });
-  const absoluteTotal = absoluteData?.length ?? views.length; 
+  const { count: absoluteTotal } = await getSupabaseAdmin().from("portal_page_views").select("id", { count: "exact", head: true });
 
   const topics = [...topicMap.entries()].map(([topic, views]) => ({ topic, views }));
   return {
     totalViews: currentViews.length,
-    absoluteTotal: absoluteTotal || currentViews.length,
+    absoluteTotal: absoluteTotal ?? 0,
     previousViews: previousViews.length,
     trendPercentage: Math.round(trend),
     dailyData,

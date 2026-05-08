@@ -16,10 +16,13 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://portalm4.com.br")
 };
 
+import { HitTracker } from "./hit-tracker";
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR">
       <body>
+        <HitTracker />
         <Script async src="https://www.googletagmanager.com/gtag/js?id=G-GNFK5W0K7N" />
         <Script id="google-analytics">
           {`
