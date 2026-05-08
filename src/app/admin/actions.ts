@@ -129,7 +129,7 @@ export async function remakeImageAction(formData: FormData) {
   const contextKeywords = ["modern", "professional", "minimalist", "luxury", "technology", "abstract-dark"];
   const randomContext = contextKeywords[Math.floor(Math.random() * contextKeywords.length)];
   
-  // Limpar o titulo para usar como busca
+  // Limpar o título para usar como busca
   const searchTerms = title
     .toLowerCase()
     .replace(/[^a-z ]/g, "")
@@ -140,9 +140,8 @@ export async function remakeImageAction(formData: FormData) {
 
   const finalQuery = searchTerms ? `${searchTerms},${randomContext}` : `${category},${randomContext}`;
   
-  // URL Dinamica do Unsplash com assinatura baseada no ID para NUNCA repetir entre posts
-  // URL Estabilizada: Usamos o redirecionador de busca profissional
-  const actualUrl = `https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1400&q=80&sig=${id.slice(0, 8)}-${Date.now()}`;
+  // URL Dinâmica e Aleatória: Usamos o redirecionador 'featured' com um 'sig' único para forçar uma nova imagem a cada clique
+  const actualUrl = `https://source.unsplash.com/featured/?${finalQuery}&sig=${id.slice(0, 5)}-${Date.now()}`;
   
   await updatePost(id, {
     imageUrl: actualUrl

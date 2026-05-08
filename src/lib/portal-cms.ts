@@ -203,7 +203,7 @@ export async function createQueuedPost(input: { topic: string; scheduledAt?: str
     category: "GERAL", // O Agente pode ajustar isso depois
     status: "queued" as PostStatus,
     priority: 1,
-    imageUrl: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=2070&auto=format&fit=crop",
+    imageUrl: `https://source.unsplash.com/featured/?${input.topic.toLowerCase().replace(/[^a-z]+/g, ',')},technology&sig=${Date.now()}`,
     scheduledAt: input.scheduledAt,
     isActive: true
   };
