@@ -115,9 +115,15 @@ export async function remakePostAction(formData: FormData) {
 
 export async function remakeImageAction(formData: FormData) {
   const id = String(formData.get("id"));
-  const title = String(formData.get("title") || "");
-  const keywords = title.toLowerCase().replace(/[^a-z ]/g, "").split(" ").filter(w => w.length > 3).slice(0, 3).join(",");
-  const actualUrl = `https://loremflickr.com/1400/800/${keywords || "luxury"}/all?lock=${Date.now()}`;
+  const premiumPhotos = [
+    "photo-1519389950473-47ba0277781c", "photo-1485827404703-89b55fcc595e", 
+    "photo-1460925895917-afdab827c52f", "photo-1590283603385-17ffb3a7f29f",
+    "photo-1677442136019-21780ecad995", "photo-1620712943543-bcc4628c9759",
+    "photo-1642790106117-e829e14a795f", "photo-1556761175-b413da4baf72",
+    "photo-1554224155-6726b3ff858f", "photo-1552664730-d307ca884978"
+  ];
+  const randomPhoto = premiumPhotos[Math.floor(Math.random() * premiumPhotos.length)];
+  const actualUrl = `https://images.unsplash.com/${randomPhoto}?auto=format&fit=crop&w=1400&q=80`;
   await updatePost(id, { imageUrl: actualUrl });
   revalidatePortal();
 }

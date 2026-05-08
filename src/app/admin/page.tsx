@@ -351,7 +351,7 @@ export default async function AdminPage({ searchParams }: Props) {
                       <label className={styles.field} style={{ marginBottom: 0 }}>
                         <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>IMAGEM (URL)</span>
                         <div style={{ display: 'flex', gap: '8px' }}>
-                          <input name="imageUrl" defaultValue={post.imageUrl} placeholder="URL da imagem" style={{ fontSize: '0.8rem', padding: '8px', flex: 1 }} />
+                          <input key={post.imageUrl} name="imageUrl" defaultValue={post.imageUrl} placeholder="URL da imagem" style={{ fontSize: '0.8rem', padding: '8px', flex: 1 }} />
                           <button 
                             formAction={remakeImageAction} 
                             formTarget="_self"
