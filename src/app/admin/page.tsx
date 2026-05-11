@@ -74,13 +74,32 @@ export default async function AdminPage({ searchParams }: Props) {
   const filteredPosts = status === "all" ? allPosts : allPosts.filter(p => p.status === status);
 
   const sortedPosts = [...filteredPosts].sort((a, b) => {
-    const statusOrder = { "review": 0, "draft": 1, "approved": 2, "published": 3, "rejected": 4 };
-    const orderA = statusOrder[a.status as keyof typeof statusOrder] ?? 99;
-    const orderB = statusOrder[b.status as keyof typeof statusOrder] ?? 99;
-    
+    // Ordem editorial: gerando > fila > revisao > aprovado > publicado > rejeitado
+    const statusOrder: Record<string, number> = {
+      "generating": 0,
+      "queued":     1,
+      "review":     2,
+      "approved":   3,
+      "published":  4,
+      "rejected":   5,
+      "draft":      6
+    };
+    const orderA = statusOrder[a.status] ?? 99;
+    const orderB = statusOrder[b.status] ?? 99;
     if (orderA !== orderB) return orderA - orderB;
-    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
+
+  // Mapa de tradução e estilo dos status
+  const STATUS_INFO: Record<string, { label: string; color: string; bg: string; border: string }> = {
+    generating: { label: "Gerando",    color: "var(--cyan)",   bg: "rgba(32,217,255,0.15)",  border: "var(--cyan)" },
+    queued:     { label: "Na Fila",    color: "white",         bg: "rgba(255,255,255,0.08)", border: "rgba(255,255,255,0.2)" },
+    review:     { label: "Em Revisão", color: "black",         bg: "var(--cyan)",             border: "var(--cyan)" },
+    approved:   { label: "Aprovado",   color: "black",         bg: "var(--green)",            border: "var(--green)" },
+    published:  { label: "Publicado",  color: "black",         bg: "var(--green)",            border: "var(--green)" },
+    rejected:   { label: "Rejeitado",  color: "white",         bg: "rgba(251,113,133,0.2)",  border: "var(--danger)" },
+    draft:      { label: "Rascunho",   color: "white",         bg: "rgba(255,255,255,0.05)", border: "rgba(255,255,255,0.1)" },
+  };
 
   return (
     <main className="containerFull admin-inter" style={{ paddingTop: 40, paddingBottom: 80 }}>
@@ -250,11 +269,22 @@ export default async function AdminPage({ searchParams }: Props) {
                </div>
             </div>
 
-            <div style={{ textAlign: 'right', marginTop: 8 }}>
-              <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: 800, marginBottom: 8, color: 'var(--muted)' }}>SALVAR & ALTERAR STATUS</span>
+            <div style={{ textAlign: 'right', marginTop: 8, display: 'flex', gap: '12px', justifyContent: 'flex-end', alignItems: 'center' }}>
+              <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: 800, color: 'var(--muted)', marginRight: '10px' }}>GERENCIAR AGENTE</span>
+              <button 
+                className="buttonSecondary" 
+                type="submit" 
+                name="actionType"
+                value="saveOnly"
+                style={{ fontWeight: 800 }}
+              >
+                SALVAR CONFIGURACOES
+              </button>
               <button 
                 className="button" 
                 type="submit" 
+                name="actionType"
+                value="toggle"
                 style={{ 
                   background: autonomy.active ? 'var(--green)' : 'rgba(255,255,255,0.1)', 
                   color: autonomy.active ? 'black' : 'white', 
@@ -286,13 +316,48 @@ export default async function AdminPage({ searchParams }: Props) {
 
       <div className={styles.adminLayout} style={{ gridTemplateColumns: '300px 1fr', gap: '32px' }}>
           <aside className={`${styles.sidebar} card`} style={{ padding: 24, height: 'fit-content' }}>
-            <span className={styles.eyebrow}>Filtros Editorial</span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: 16 }}>
-              {["all", "review", "published", "draft", "rejected"].map((item) => (
-                <Link className={`buttonSecondary ${styles.filterButton}`} href={`/admin?status=${item}`} key={item} style={{ background: status === item ? 'rgba(32, 217, 255, 0.15)' : '' }}>
-                  {item === "all" ? "Todos os Posts" : item.toUpperCase()}
-                </Link>
-              ))}
+            <span className={styles.eyebrow}>Filtrar por Status</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: 16 }}>
+              {([
+                { key: "all",        label: "Todos os Artigos" },
+                { key: "generating", label: "Gerando" },
+                { key: "queued",     label: "Na Fila" },
+                { key: "review",     label: "Em Revisão" },
+                { key: "approved",   label: "Aprovado" },
+                { key: "published",  label: "Publicado" },
+                { key: "rejected",   label: "Rejeitado" },
+              ] as const).map(({ key, label }) => {
+                const count = key === "all"
+                  ? allPosts.length
+                  : allPosts.filter(p => p.status === key).length;
+                const isActive = status === key;
+                return (
+                  <Link
+                    key={key}
+                    className={`buttonSecondary ${styles.filterButton}`}
+                    href={`/admin?status=${key}`}
+                    style={{
+                      background: isActive ? 'rgba(32, 217, 255, 0.15)' : '',
+                      border: isActive ? '1px solid var(--cyan)' : '',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <span>{label}</span>
+                    <span style={{
+                      background: isActive ? 'var(--cyan)' : 'rgba(255,255,255,0.1)',
+                      color: isActive ? 'black' : 'white',
+                      borderRadius: '12px',
+                      padding: '2px 8px',
+                      fontSize: '0.7rem',
+                      fontWeight: 900,
+                      minWidth: '22px',
+                      textAlign: 'center'
+                    }}>{count}</span>
+                  </Link>
+                );
+              })}
             </div>
 
             <hr style={{ borderColor: "rgba(125,211,252,.18)", margin: "24px 0" }} />
@@ -319,18 +384,23 @@ export default async function AdminPage({ searchParams }: Props) {
                 <div style={{ position: 'relative', height: '220px' }}>
                   <img src={post.imageUrl || 'https://images.unsplash.com/photo-1611974714658-058f40da23fb?q=80&w=2070&auto=format&fit=crop'} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   <div style={{ position: 'absolute', top: 12, right: 12 }}>
-                    <span style={{ 
-                      padding: '4px 12px', 
-                      borderRadius: '20px', 
-                      fontSize: '0.65rem', 
-                      fontWeight: 900, 
-                      textTransform: 'uppercase',
-                      background: post.status === 'review' ? 'var(--cyan)' : 'var(--bg)',
-                      color: post.status === 'review' ? 'black' : 'white',
-                      border: '1px solid var(--cyan)'
-                    }}>
-                      {post.status}
-                    </span>
+                    {(() => {
+                      const info = STATUS_INFO[post.status] ?? { label: post.status, color: 'white', bg: 'rgba(0,0,0,0.5)', border: 'white' };
+                      return (
+                        <span style={{
+                          padding: '4px 12px',
+                          borderRadius: '20px',
+                          fontSize: '0.65rem',
+                          fontWeight: 900,
+                          textTransform: 'uppercase',
+                          background: info.bg,
+                          color: info.color,
+                          border: `1px solid ${info.border}`
+                        }}>
+                          {info.label}
+                        </span>
+                      );
+                    })()}
                   </div>
                 </div>
                 
@@ -376,7 +446,7 @@ export default async function AdminPage({ searchParams }: Props) {
                     </label>
 
                     <button className="button" type="submit" style={{ background: 'linear-gradient(135deg, #20d9ff, #3b82f6)', border: 'none', width: '100%', marginBottom: 12 }}>
-                      SALVAR EDICOES
+                      Salvar Edições
                     </button>
                   </form>
 
@@ -411,19 +481,19 @@ export default async function AdminPage({ searchParams }: Props) {
                     <form action={remakePostAction} style={{ flex: 1 }}>
                       <input type="hidden" name="id" value={post.id} />
                       <input type="hidden" name="title" value={post.title} />
-                      <button className="buttonSecondary" type="submit" style={{ width: '100%', fontSize: '0.65rem' }}>REFAZER</button>
+                      <button className="buttonSecondary" type="submit" style={{ width: '100%', fontSize: '0.65rem' }}>Refazer Conteúdo</button>
                     </form>
                     <form action={deletePostAction}>
                       <input type="hidden" name="id" value={post.id} />
-                      <button className="buttonSecondary" type="submit" style={{ color: 'var(--danger)', fontSize: '0.65rem' }}>EXCLUIR</button>
+                      <button className="buttonSecondary" type="submit" style={{ color: 'var(--danger)', fontSize: '0.65rem' }}>Excluir</button>
                     </form>
                   </div>
                 </div>
               </article>
             )) : (
               <div className="card" style={{ padding: 40, textAlign: 'center', gridColumn: '1 / -1' }}>
-                <p>Nenhum post encontrado para este filtro.</p>
-                <Link href="/admin?status=all" className="button">Ver todos os posts</Link>
+                <p>Nenhum artigo encontrado para este filtro.</p>
+                <Link href="/admin?status=all" className="button">Ver todos os artigos</Link>
               </div>
             )}
           </section>
