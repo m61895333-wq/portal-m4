@@ -14,40 +14,62 @@ export function BatchCreator() {
     const formData = new FormData(e.currentTarget);
     const topic = formData.get("topic") as string;
     const count = Number(formData.get("count") ?? 1);
-    
+
+    // Variações de ângulo editorial para garantir títulos únicos em lote
+    const ANGLE_VARIANTS = [
+      "",                                      // 1º artigo: tópico puro
+      "— Perspectivas e Tendências 2026",
+      "— Impacto no Mercado Financeiro Brasileiro",
+      "— Oportunidades Práticas para Investidores",
+      "— O Que os Especialistas Estão Dizendo",
+      "— Análise Aprofundada e Cenários Futuros",
+      "— Guia Completo Para Profissionais",
+      "— Riscos, Oportunidades e Decisões Estratégicas",
+      "— Como Preparar Sua Carteira Para Esta Realidade",
+      "— Lições do Mercado Global Para o Brasil",
+    ];
+
     setLoading(true);
     setTotal(count);
     setProgress(0);
 
     for (let i = 1; i <= count; i++) {
       setProgress(i);
+
+      // Cada artigo recebe uma variação de ângulo para garantir unicidade
+      const angle = ANGLE_VARIANTS[(i - 1) % ANGLE_VARIANTS.length];
+      const variantTopic = angle ? `${topic} ${angle}` : topic;
+
       const singleFormData = new FormData();
-      singleFormData.append("topic", topic);
+      singleFormData.append("topic", variantTopic);
       singleFormData.append("index", String(i));
       singleFormData.append("total", String(count));
-      
+
       try {
         const result = await createSingleDraftAction(singleFormData);
-        
+
         if (result && !result.success) {
-          alert(`Erro no Artigo ${i}:\n${result.error}`);
+          // Traduz o erro de duplicata para português
+          const errorMsg = result.error?.includes("duplicate key") || result.error?.includes("CURADORIA")
+            ? `Artigo ${i}: Já existe um artigo com tema muito similar na base. Tente um ângulo diferente ou tema mais específico.`
+            : `Erro no Artigo ${i}:\n${result.error}`;
+          alert(errorMsg);
           setLoading(false);
-          return; // Para a fila se der erro no banco ou na API
+          return;
         }
-        
-        // Regra de Seguranca: Pausa inteligente de 4 segundos
+
+        // Pausa inteligente entre artigos para não sobrecarregar
         if (i < count) {
-          await new Promise(resolve => setTimeout(resolve, 4000));
+          await new Promise(resolve => setTimeout(resolve, 3000));
         }
       } catch (err: any) {
-        alert("Erro fatal no servidor ao conectar: " + err.message);
+        alert("Erro ao conectar com o servidor: " + err.message);
         setLoading(false);
         return;
       }
     }
 
     setLoading(false);
-    // Recarrega a pagina no final para mostrar os novos artigos
     window.location.reload();
   }
 
