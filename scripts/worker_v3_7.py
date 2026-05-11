@@ -222,6 +222,7 @@ def process_queue():
                         'content': 'Gerando via Cronograma Autonomo...',
                         'excerpt': 'Aguardando IA...',
                         'category': 'GERAL',
+                        'image_url': 'https://images.unsplash.com/photo-1611974714658-058f40da23fb?q=80&w=1400&auto=format&fit=crop',
                         'is_active': True
                     }).execute()
                     if ins.data:
