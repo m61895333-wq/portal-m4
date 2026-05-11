@@ -121,17 +121,32 @@ export async function remakeImageAction(formData: FormData) {
     .replace(/[^a-zA-ZÀ-ÿ0-9 ]/g, "")
     .split(" ")
     .filter(w => w.length > 3)
-    .slice(0, 5)
+    .slice(0, 6)
     .join(" ");
 
-  // Prompt de engenharia: imagem conceitual premium, sem rostos ou pessoas
+  // ESTILOS VISUAIS ROTATIVOS — garante que nenhuma imagem seja visualmente igual
+  const VISUAL_STYLES = [
+    "dark background neon cyan and violet accents, cyberpunk corporate, ultra sharp",
+    "deep gold and obsidian premium luxury, volumetric light rays, photorealistic",
+    "electric blue technology grid, holographic data streams, futuristic",
+    "emerald green circuit board organic fusion, bioluminescent, 3d render",
+    "crimson red and chrome metallic, high contrast dramatic lighting, editorial",
+    "arctic white and steel blue minimalist, clean geometry, award winning",
+    "deep purple galaxy cosmos, abstract financial data visualization, glowing",
+    "amber orange sunrise gradient, premium business corporate, cinematic"
+  ];
+
+  // Seed ÚNICO: timestamp em ms + número aleatório — nunca se repete
+  const uniqueSeed = Date.now() + Math.floor(Math.random() * 999983);
+  // Estilo visual rotativo baseado no seed (distribuição uniforme)
+  const visualStyle = VISUAL_STYLES[uniqueSeed % VISUAL_STYLES.length];
+
+  // Prompt com estilo visual único e palavras-chave do título
   const prompt = encodeURIComponent(
-    `Abstract conceptual 3d render about ${cleanTitle}, corporate premium style, dark background with neon cyan and gold accents, no faces, no people, ultra detailed, 8k, award winning`
+    `Abstract conceptual 3d render about ${cleanTitle}, ${visualStyle}, no faces, no people, no text, ultra detailed, 8k resolution, award winning photography`
   );
 
-  // Pollinations AI com seed unica por artigo
-  const seed = parseInt(id.replace(/[^0-9]/g, "").slice(0, 8)) || Date.now();
-  const actualUrl = `https://image.pollinations.ai/prompt/${prompt}?width=1400&height=800&nologo=true&seed=${seed}`;
+  const actualUrl = `https://image.pollinations.ai/prompt/${prompt}?width=1400&height=800&nologo=true&seed=${uniqueSeed}`;
 
   await updatePost(id, { imageUrl: actualUrl });
   revalidatePortal();

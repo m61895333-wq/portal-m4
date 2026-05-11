@@ -81,6 +81,58 @@ def get_recent_titles(limit=30):
     except:
         return []
 
+def get_recent_image_seeds(limit=50):
+    """Extrai os seeds usados nas últimas imagens para não repetir."""
+    try:
+        res = supabase.table('portal_posts').select('image_url').order('created_at', desc=True).limit(limit).execute()
+        seeds = set()
+        for row in (res.data or []):
+            url = row.get('image_url', '') or ''
+            if 'seed=' in url:
+                try:
+                    seed_val = int(url.split('seed=')[-1].split('&')[0])
+                    seeds.add(seed_val)
+                except:
+                    pass
+        return seeds
+    except:
+        return set()
+
+def generate_unique_image_url(topic, used_seeds):
+    """Gera URL de imagem com seed único e estilo visual rotativo."""
+    import urllib.parse
+
+    # 8 ESTILOS VISUAIS ROTATIVOS — garantem diversidade visual entre artigos
+    VISUAL_STYLES = [
+        "dark background neon cyan and violet accents, cyberpunk corporate, ultra sharp",
+        "deep gold and obsidian premium luxury, volumetric light rays, photorealistic",
+        "electric blue technology grid, holographic data streams, futuristic",
+        "emerald green circuit board organic fusion, bioluminescent, 3d render",
+        "crimson red and chrome metallic, high contrast dramatic lighting, editorial",
+        "arctic white and steel blue minimalist, clean geometry, award winning",
+        "deep purple galaxy cosmos, abstract financial data visualization, glowing",
+        "amber orange sunrise gradient, premium business corporate, cinematic"
+    ]
+
+    # Gera seed único — tenta até 10 vezes para garantir que nunca se repita
+    unique_seed = None
+    for _ in range(10):
+        candidate = int(time.time() * 1000) + random.randint(1, 999983)
+        if candidate not in used_seeds:
+            unique_seed = candidate
+            used_seeds.add(candidate)  # Marca como usado localmente
+            break
+    if not unique_seed:
+        unique_seed = int(time.time() * 1000) + random.randint(1000000, 9999999)
+
+    # Estilo visual único baseado no seed (distribuição uniforme)
+    visual_style = VISUAL_STYLES[unique_seed % len(VISUAL_STYLES)]
+
+    clean_topic = ''.join(c for c in topic if c.isalnum() or c.isspace()).strip()
+    prompt_img = f"Abstract conceptual 3d render about {clean_topic}, {visual_style}, no faces, no people, no text, ultra detailed, 8k resolution, award winning photography"
+    encoded_prompt = urllib.parse.quote(prompt_img)
+    return f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1400&height=800&nologo=true&seed={unique_seed}"
+
 def title_already_exists(title, recent_titles):
     """Verifica se o título (ou algo muito parecido) já existe."""
     title_lower = title.lower().strip()
@@ -264,12 +316,9 @@ Escreva agora em português do Brasil:"""
         content = generate_content(prompt)
         
         if content:
-            # Novo motor de imagens: Pollinations.ai (Conceitual sem pessoas)
-            import urllib.parse
-            clean_topic = ''.join(c for c in topic if c.isalnum() or c.isspace())
-            prompt_img = f"Abstract conceptual 3d render about {clean_topic}, corporate business style, dark premium background, neon lights, no faces, no people, highly detailed, 8k"
-            encoded_prompt = urllib.parse.quote(prompt_img)
-            image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1400&height=800&nologo=true&seed={int(time.time())}"
+            # Motor anti-repetição de imagens: seed único + estilos visuais rotativos
+            used_seeds = get_recent_image_seeds(50)
+            image_url = generate_unique_image_url(topic, used_seeds)
 
             cat_prompt = f"Qual categoria: MERCADO FINANCEIRO, INVESTIMENTOS, INTELIGENCIA ARTIFICIAL, TECNOLOGIA, CARREIRA, EMPREENDEDORISMO? Responda uma."
             category = generate_content(cat_prompt) or "TECNOLOGIA"
