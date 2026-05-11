@@ -250,8 +250,15 @@ export async function createQueuedPost(input: { topic: string; scheduledAt?: str
     );
   }
 
-  // Criamos um esqueleto do post. O Agente na VPS preencherá o conteúdo e o excerpt.
+  // Slug único para o artigo
   const slug = `pauta-${Date.now()}-${input.topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50)}`;
+
+  // Gera uma imagem placeholder imediata para satisfazer o NOT NULL do banco.
+  // O worker da VPS substituirá por uma imagem definitiva ao gerar o conteúdo.
+  const placeholderSeed = Date.now() + Math.floor(Math.random() * 99991);
+  const cleanTopic = input.topic.replace(/[^a-zA-ZÀ-ÿ0-9 ]/g, '').split(' ').filter(w => w.length > 3).slice(0, 5).join(' ');
+  const placeholderPrompt = encodeURIComponent(`Abstract 3d render about ${cleanTopic || 'finance technology'}, dark background neon cyan accents, no text, no faces, ultra detailed`);
+  const placeholderImageUrl = `https://image.pollinations.ai/prompt/${placeholderPrompt}?width=1400&height=800&nologo=true&seed=${placeholderSeed}`;
 
   const postData = {
     title: input.topic,
@@ -261,7 +268,7 @@ export async function createQueuedPost(input: { topic: string; scheduledAt?: str
     category: "GERAL",
     status: "queued" as PostStatus,
     priority: 1,
-    imageUrl: null,
+    imageUrl: placeholderImageUrl,
     scheduledAt: input.scheduledAt,
     isActive: true
   };
