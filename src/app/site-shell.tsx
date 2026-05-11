@@ -51,6 +51,7 @@ export async function Header() {
         <div className="menu" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <MobileMenuTrigger totalViews={perf.totalViews} />
           <Link href="/" className="hideMobile">Home</Link>
+          <Link href="/artigos" className="hideMobile" style={{ color: 'var(--cyan)', fontWeight: 700 }}>Artigos</Link>
           <Link href="/sobre" className="hideMobile">Sobre</Link>
           <Link href="/contato" className="hideMobile">Contato</Link>
         </div>
@@ -74,6 +75,13 @@ export function Footer() {
           </div>
           <p>Conteudo premium do Grupo M4 sobre mercado, tecnologia, IA e negocios digitais.</p>
           <p>Todos os direitos reservados.</p>
+        </div>
+        <div>
+          <strong>Navegação</strong>
+          <Link href="/">Home</Link>
+          <Link href="/artigos">Todos os Artigos</Link>
+          <Link href="/sobre">Sobre</Link>
+          <Link href="/contato">Contato</Link>
         </div>
         <div>
           <strong>Categorias</strong>

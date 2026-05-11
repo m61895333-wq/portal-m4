@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { categories } from "@/lib/categories";
+import { categories, categoryName } from "@/lib/categories";
 import { listPublicPosts } from "@/lib/portal-cms";
 import { Footer, Header, Sidebar } from "./site-shell";
 import styles from "./portal.module.css";
@@ -32,6 +32,7 @@ export default async function HomePage() {
 
   const hero = posts[0];
   const recent = posts.slice(0, 6);
+  const totalPosts = posts.length;
 
   return (
     <div className="mainLayout">
@@ -77,18 +78,47 @@ export default async function HomePage() {
             <div className={styles.sectionHeader}>
               <div>
                 <h2>Artigos Recentes</h2>
+                <p style={{ color: 'var(--muted)', marginTop: 8, fontSize: '1rem' }}>
+                  Exibindo 6 de {totalPosts} artigos publicados
+                </p>
               </div>
+              <Link
+                href="/artigos"
+                className="buttonSecondary"
+                style={{ whiteSpace: 'nowrap', flexShrink: 0 }}
+              >
+                Ver todos os artigos &rarr;
+              </Link>
             </div>
           <div className={styles.postGrid}>
             {recent.map((post) => (
               <Link key={post.id} href={`/artigo/${post.slug}`} className={`${styles.postCard} card`}>
                 <img src={post.imageUrl} alt={post.title} />
-                <span className="badge" style={{ marginLeft: 22 }}>{post.category.replaceAll("-", " ")}</span>
+                <span className="badge" style={{ marginLeft: 22 }}>{categoryName(post.category)}</span>
                 <h3 style={{ fontFamily: 'var(--font-serif)' }}>{post.title}</h3>
                 <p>{post.excerpt}</p>
               </Link>
             ))}
           </div>
+
+          {/* CTA para ver todos os artigos */}
+          {totalPosts > 6 && (
+            <div style={{ textAlign: 'center', marginTop: 56 }}>
+              <Link
+                href="/artigos"
+                className="button"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(32,217,255,0.15), rgba(59,130,246,0.15))',
+                  border: '1px solid var(--cyan)',
+                  fontSize: '1rem',
+                  padding: '14px 40px',
+                  display: 'inline-block'
+                }}
+              >
+                Ver todos os {totalPosts} artigos &rarr;
+              </Link>
+            </div>
+          )}
         </section>
       </div>
         
