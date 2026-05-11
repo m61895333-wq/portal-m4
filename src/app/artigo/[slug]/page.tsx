@@ -34,11 +34,20 @@ export default async function ArticlePage({ params }: Props) {
         <article className="container" style={{ paddingTop: 60, paddingBottom: 100 }}>
           <div className="articleLayout">
             <div className="articleReader">
-              <span className="badge" style={{ marginBottom: 20 }}>{categoryName(post.category)}</span>
+              <span className="badge" style={{ marginBottom: 16 }}>
+                {categoryName(post.category)}
+              </span>
               <h1>{post.title}</h1>
-              
-              <div className="adSlot" id="ad-top">Espaco Reservado para Anuncio</div>
-              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: 12, marginBottom: 32, color: 'var(--muted)', fontSize: '0.9rem' }}>
+                <span>Por <strong style={{ color: 'var(--cyan)' }}>Equipe Editorial M4</strong></span>
+                <span style={{ opacity: 0.4 }}>|</span>
+                <time dateTime={post.publishedAt || post.createdAt}>
+                  {new Date(post.publishedAt || post.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                </time>
+              </div>
+
+              <div className="adSlot" id="ad-top">Espaço Reservado para Anúncio</div>
+
               <p style={{ fontSize: '1.4rem', color: 'var(--text)', fontWeight: 600, marginBottom: 40, lineHeight: 1.5 }}>
                 {post.excerpt}
               </p>

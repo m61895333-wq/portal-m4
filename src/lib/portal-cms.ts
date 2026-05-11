@@ -161,9 +161,20 @@ export async function getPostBySlug(slug: string) {
   return fromDb(data as DbPost);
 }
 
-export async function listCategoryPosts(category: string) {
+export async function listCategoryPosts(categorySlug: string) {
   const posts = await listPublicPosts();
-  return posts.filter((post) => post.category === category);
+  return posts.filter((post) => {
+    // O banco salva categoria em MAIÚSCULO com espaços (ex: "MERCADO FINANCEIRO")
+    // O slug da categoria é em minúsculo com hífen (ex: "mercado-financeiro")
+    // Normaliza os dois para comparar corretamente
+    const postCategorySlug = post.category
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")  // remove acentos
+      .replace(/[^a-z0-9]+/g, "-")      // espaços e especiais → hífen
+      .replace(/^-+|-+$/g, "");         // remove hífens nas bordas
+    return postCategorySlug === categorySlug;
+  });
 }
 
 /**

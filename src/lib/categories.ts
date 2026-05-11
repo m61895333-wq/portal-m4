@@ -70,6 +70,17 @@ export function getCategory(slug: string) {
   return categories.find((category) => category.slug === slug);
 }
 
-export function categoryName(slug: string) {
-  return getCategory(slug)?.name ?? "Portal M4";
+export function categoryName(slugOrDbValue: string) {
+  // Aceita tanto slug ("mercado-financeiro") quanto valor do banco ("MERCADO FINANCEIRO")
+  const directMatch = getCategory(slugOrDbValue);
+  if (directMatch) return directMatch.name;
+
+  // Normaliza o valor do banco para slug e tenta novamente
+  const normalized = slugOrDbValue
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return getCategory(normalized)?.name ?? slugOrDbValue;
 }
