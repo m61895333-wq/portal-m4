@@ -206,14 +206,16 @@ export async function createQueuedPost(input: { topic: string; scheduledAt?: str
 
   // VERIFICAÇÃO DE DUPLICATA: busca posts com título parecido nos últimos 30 dias
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const { data: existingPosts } = await getSupabaseAdmin()
+  const { data: existingPostsRaw } = await getSupabaseAdmin()
     .from("portal_posts")
     .select("id, title, status")
     .ilike("title", `%${searchKey.slice(0, 25)}%`)
     .gte("created_at", thirtyDaysAgo)
     .limit(3);
 
-  if (existingPosts && existingPosts.length > 0) {
+  const existingPosts = (existingPostsRaw ?? []) as Array<{ id: string; title: string; status: string }>;
+
+  if (existingPosts.length > 0) {
     const dupe = existingPosts[0];
     throw new Error(
       `CURADORIA M4: Artigo similar já existe na base (${dupe.status.toUpperCase()}): "${dupe.title}". Tente um ângulo diferente ou tema mais específico.`
