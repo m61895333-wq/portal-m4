@@ -163,17 +163,34 @@ export async function getPostBySlug(slug: string) {
 
 export async function listCategoryPosts(categorySlug: string) {
   const posts = await listPublicPosts();
+
+  // Mapa explícito: valor do banco → slug do frontend (espelho do categories.ts)
+  const DB_TO_SLUG: Record<string, string> = {
+    'MERCADO FINANCEIRO':      'mercado-financeiro',
+    'INVESTIMENTOS':           'investimentos',
+    'INTELIGENCIA ARTIFICIAL': 'inteligencia-artificial',
+    'TECNOLOGIA':              'tecnologia-negocios-digitais',
+    'CARREIRA':                'carreira-ia',
+    'EMPREENDEDORISMO':        'empreendedorismo-digital',
+    'EDUCACAO FINANCEIRA':     'educacao-financeira',
+    'IA & MERCADO':            'inteligencia-artificial',
+    'IA E MERCADO':            'inteligencia-artificial',
+    'GERAL':                   'mercado-financeiro',
+  };
+
   return posts.filter((post) => {
-    // O banco salva categoria em MAIÚSCULO com espaços (ex: "MERCADO FINANCEIRO")
-    // O slug da categoria é em minúsculo com hífen (ex: "mercado-financeiro")
-    // Normaliza os dois para comparar corretamente
-    const postCategorySlug = post.category
+    // Tenta o mapa explícito primeiro
+    const mapped = DB_TO_SLUG[post.category.toUpperCase().trim()];
+    if (mapped) return mapped === categorySlug;
+
+    // Fallback: normaliza para slug genérico
+    const slug = post.category
       .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")  // remove acentos
-      .replace(/[^a-z0-9]+/g, "-")      // espaços e especiais → hífen
-      .replace(/^-+|-+$/g, "");         // remove hífens nas bordas
-    return postCategorySlug === categorySlug;
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    return slug === categorySlug;
   });
 }
 

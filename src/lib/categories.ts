@@ -71,16 +71,35 @@ export function getCategory(slug: string) {
 }
 
 export function categoryName(slugOrDbValue: string) {
-  // Aceita tanto slug ("mercado-financeiro") quanto valor do banco ("MERCADO FINANCEIRO")
+  // 1. Tentativa direta (já é um slug válido)
   const directMatch = getCategory(slugOrDbValue);
   if (directMatch) return directMatch.name;
 
-  // Normaliza o valor do banco para slug e tenta novamente
+  // 2. Mapa explícito: valor salvo no banco → slug do frontend
+  const DB_TO_SLUG: Record<string, string> = {
+    // Valores corretos salvos pelo worker novo
+    'MERCADO FINANCEIRO':      'mercado-financeiro',
+    'INVESTIMENTOS':           'investimentos',
+    'INTELIGENCIA ARTIFICIAL': 'inteligencia-artificial',
+    'TECNOLOGIA':              'tecnologia-negocios-digitais',
+    'CARREIRA':                'carreira-ia',
+    'EMPREENDEDORISMO':        'empreendedorismo-digital',
+    'EDUCACAO FINANCEIRA':     'educacao-financeira',
+    // Variações antigas / geradas por IA
+    'IA & MERCADO':            'inteligencia-artificial',
+    'IA E MERCADO':            'inteligencia-artificial',
+    'GERAL':                   'mercado-financeiro',
+  };
+
+  const mapped = DB_TO_SLUG[slugOrDbValue.toUpperCase().trim()];
+  if (mapped) return getCategory(mapped)?.name ?? slugOrDbValue;
+
+  // 3. Fallback: normaliza para slug genérico
   const normalized = slugOrDbValue
     .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
   return getCategory(normalized)?.name ?? slugOrDbValue;
 }
