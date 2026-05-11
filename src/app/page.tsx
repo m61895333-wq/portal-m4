@@ -56,9 +56,6 @@ export default async function HomePage() {
                   <Link className="button" href={`/artigo/${hero.slug}`}>
                     Ler artigo principal
                   </Link>
-                  <Link className="buttonSecondary" href="#categorias">
-                    Explorar Conteudo
-                  </Link>
                 </div>
               </div>
               <article className={`${styles.featured} card`}>
@@ -79,7 +76,6 @@ export default async function HomePage() {
           <section>
             <div className={styles.sectionHeader}>
               <div>
-                <span className={styles.eyebrow}>Explorar Conteudo</span>
                 <h2>Artigos Recentes</h2>
               </div>
             </div>
