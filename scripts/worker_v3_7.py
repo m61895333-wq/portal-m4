@@ -98,6 +98,57 @@ def get_recent_image_seeds(limit=50):
     except:
         return set()
 
+def get_recent_content_samples(limit=20):
+    """Busca as primeiras 250 palavras dos últimos artigos para comparar corpo do texto."""
+    try:
+        res = supabase.table('portal_posts') \
+            .select('content') \
+            .in_('status', ['review', 'approved', 'published']) \
+            .order('created_at', desc=True) \
+            .limit(limit) \
+            .execute()
+        samples = []
+        for row in (res.data or []):
+            body = (row.get('content') or '').strip()
+            # Remove linhas de hashtags/palavras-chave do final
+            body = body.split('\n\n#')[0].split('\n\n##')[0]
+            words = body.lower().split()
+            samples.append(set(words[:250]))
+        return samples
+    except:
+        return []
+
+def content_is_too_similar(new_content, existing_samples, threshold=0.40):
+    """Detecta se o corpo do artigo é muito parecido com algum artigo já existente.
+    Usa Jaccard de palavras nas primeiras 250 palavras. Limiar: 40%."""
+    if not existing_samples or not new_content:
+        return False, 0.0
+
+    body = new_content.strip().split('\n\n#')[0]
+    words_new = set(body.lower().split()[:250])
+
+    if len(words_new) < 50:  # Texto muito curto, não verifica
+        return False, 0.0
+
+    # Stopwords comuns em português para ignorar no cálculo
+    STOPWORDS = {'de','a','o','que','e','do','da','em','um','para','é','com','uma','os','no','se','na','por','mais','as','dos','como','mas','foi','ao','ele','das','tem','à','seu','sua','ou','ser','quando','muito','há','nos','já','também','só','pelo','pela','até','isso','ela','entre','era','depois','sem','mesmo','aos','ter','seus','quem','nas','me','esse','eles','estão','você','tinha','foram','essa','num','nem','suas','meu','às','minha','têm','numa','pelos','pelas','este','dele','tu','te','vocês','lhes','meus','minhas','teu','tua','teus','tuas','nos','nós','vós','lhe','dela','deles','delas','esta','estes','estas','aquele','aquela','aqueles','aquelas','isso','aquilo','estar','estou','está','estamos','estão'}
+    words_new_filtered = words_new - STOPWORDS
+
+    max_sim = 0.0
+    for existing_words in existing_samples:
+        existing_filtered = existing_words - STOPWORDS
+        if not existing_filtered:
+            continue
+        intersection = len(words_new_filtered & existing_filtered)
+        union = len(words_new_filtered | existing_filtered)
+        if union == 0:
+            continue
+        sim = intersection / union
+        if sim > max_sim:
+            max_sim = sim
+
+    return max_sim >= threshold, round(max_sim * 100, 1)
+
 def generate_unique_image_url(topic, used_seeds):
     """Gera URL de imagem com seed único e estilo visual rotativo."""
     import urllib.parse
@@ -317,6 +368,19 @@ Escreva agora em português do Brasil:"""
         content = generate_content(prompt)
         
         if content:
+            # VERIFICAÇÃO DE SIMILARIDADE DO CORPO DO TEXTO
+            content_samples = get_recent_content_samples(20)
+            is_similar, sim_pct = content_is_too_similar(content, content_samples, threshold=0.40)
+            if is_similar:
+                print(f'>>> CURADORIA CONTEÚDO: Texto {sim_pct}% similar a artigo existente. Descartando e reagendando...')
+                supabase.table('portal_posts').update({
+                    'status': 'queued',
+                    'reviewer_notes': f'CONTEÚDO REJEITADO ({sim_pct}% similar). Regenerar com ângulo diferente.',
+                    'content': 'Conteúdo rejeitado por similaridade. Aguardando regeneração...'
+                }).eq('id', post_id).execute()
+                continue
+            print(f'>>> CURADORIA CONTEÚDO: Texto aprovado (similaridade máxima: {sim_pct}%)')
+
             # Motor anti-repetição de imagens: seed único + estilos visuais rotativos
             used_seeds = get_recent_image_seeds(50)
             image_url = generate_unique_image_url(topic, used_seeds)
