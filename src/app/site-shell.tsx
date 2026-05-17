@@ -48,6 +48,10 @@ export async function Header() {
   return (
     <header className="header">
       <nav className="container nav">
+        <Link href="/" className="headerBrand" aria-label="Portal M4">
+          <img src="/portal-m4-brand-logo.png" alt="" />
+          <span>Portal M4</span>
+        </Link>
         <div className="menu" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <MobileMenuTrigger totalViews={perf.totalViews} />
           <Link href="/" className="hideMobile">Home</Link>
@@ -55,6 +59,9 @@ export async function Header() {
           <Link href="/sobre" className="hideMobile">Sobre</Link>
           <Link href="/contato" className="hideMobile">Contato</Link>
         </div>
+        <Link href="/artigos" className="headerCta">
+          Explorar
+        </Link>
       </nav>
     </header>
   );

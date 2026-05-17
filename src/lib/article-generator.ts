@@ -4,18 +4,18 @@ import { categories } from "./categories";
 // Regra Soberana: Sempre limpar a chave de API de caracteres invisíveis (BOM) do Windows
 const rawApiKey = process.env.GEMINI_API_KEY || "";
 const cleanApiKey = rawApiKey.replace(/^\uFEFF/, "").trim();
-const genAI = new GoogleGenerativeAI(cleanApiKey);
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+const geminiFallbackEnabled = process.env.GEMINI_FALLBACK_ENABLED === "true";
 
-const realisticImages: Record<string, string> = {
-  "mercado-financeiro": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1400&q=85",
-  investimentos: "https://images.unsplash.com/photo-1642790106117-e829e14a795f?auto=format&fit=crop&w=1400&q=85",
-  "inteligencia-artificial": "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1400&q=85",
-  "tecnologia-negocios-digitais": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1400&q=85",
-  "carreira-ia": "https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1400&q=85",
-  "educacao-financeira": "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1400&q=85",
-  "empreendedorismo-digital": "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1400&q=85"
-};
+function getGeminiModel() {
+  if (!geminiFallbackEnabled) {
+    throw new Error("Gemini esta desativado por padrao. Use o worker Ollama; habilite GEMINI_FALLBACK_ENABLED=true apenas em contingencia.");
+  }
+  if (!cleanApiKey) {
+    throw new Error("GEMINI_API_KEY nao configurada.");
+  }
+  const genAI = new GoogleGenerativeAI(cleanApiKey);
+  return genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || "gemini-2.5-flash" });
+}
 
 function slugify(value: string) {
   return value
@@ -101,63 +101,72 @@ export async function generateEditorialDraft(input: {
   const style = OPENING_STYLES[Math.floor(Math.random() * OPENING_STYLES.length)];
   console.log(`[GERADOR SEQUENCIAL] Estilo de abertura: ${style.nome}`);
 
-  // 1. ESTRUTURA E CONTEÚDO (PROTOCOLO ZERO-REVIEW)
+  // 1. ESTRUTURA E CONTEÚDO (PROTOCOLO DE COMPLETUDE EDITORIAL)
+  // O prompt agora foca em entregar um artigo EXAUSTIVO e PROFUNDO, seguindo a nova diretriz do portal.
   const articlePrompt = `
-    Você é o Editor-Chefe Sênior do Portal M4, referência em jornalismo financeiro e tecnológico no Brasil.
+    Você é o Editor-Chefe Sênior do Portal M4, autoridade máxima em jornalismo financeiro e tecnológico.
     
     TEMA: ${baseTopic}
     
     == REGRA DE ABERTURA (OBRIGATÓRIA) ==
     Estilo sorteado: ${style.nome}
     Instrução: ${style.instrucao}
-    O primeiro parágrafo DEVE seguir EXATAMENTE este estilo.
-    PROIBIDO começar com: "Nos últimos anos", "Em um cenário", "No contexto atual", "Com o avanço", "A inteligência artificial", "O mercado financeiro" ou qualquer abertura genérica e previsível.
+    O primeiro parágrafo DEVE seguir EXATAMENTE este estilo para capturar a atenção imediata.
     
-    == ESTRUTURA ==
-    1. LEAD impactante (seguindo o estilo acima — 3 a 4 linhas)
-    2. ## [Subtítulo — Análise do Cenário]
-    3. ## [Subtítulo — Dados e Fontes] (cite Bloomberg, Reuters, IBGE, Banco Central, Gartner, FMI)
-    4. ## [Subtítulo — Impacto Prático para o Leitor]
-    5. ## Visão M4 (projeção estratégica exclusiva)
+    == ESTRUTURA DE PLANEJAMENTO ==
+    1. LEAD impactante (seguindo o estilo acima)
+    2. ## Análise do Cenário (Contexto global e local)
+    3. ## Dados e Evidências (Cite Bloomberg, Reuters, Banco Central, Gartner)
+    4. ## Impacto Prático (Como isso afeta o bolso e o dia a dia do investidor/leitor)
+    5. ## Visão Estratégica M4 (Projeção para os próximos 12-24 meses)
     
-    == REGRAS ABSOLUTAS ==
-    1. Tom HUMANO, fluente, inteligente — não robótico nem repetitivo
-    2. Texto puro: SEM asteriscos, SEM markdown bold (**palavra**)
-    3. Mínimo de 1.000 palavras com profundidade real
-    4. 3ª pessoa sempre — proibido "eu", "nós", "você"
-    5. ANTI-AI-ISMS: proibido "Neste artigo vamos...", "Em conclusão...", "Espero que..."
-    6. No final: ESPAÇO DUPLO, depois exatamente 10 hashtags, depois 10 palavras-chave separadas por vírgula
+    == REGRAS DE OURO ==
+    1. CONTEÚDO EXAUSTIVO: Não economize informação. O artigo deve ser COMPLETO.
+    2. Tom HUMANO, sofisticado e fluente — proibido ser robótico.
+    3. Texto puro: SEM asteriscos, SEM negrito markdown (**palavra**).
+    4. 3ª pessoa sempre. Proibido "eu", "nós", "você".
+    5. No final do texto, após o conteúdo, gere um perfil visual épico.
     
     ESTRUTURA JSON ESPERADA (SEM CRASES):
     {
-      "title": "Título jornalístico impactante",
-      "excerpt": "Lead de até 200 caracteres — a frase de abertura do artigo",
-      "content": "Texto completo aqui..."
+      "title": "Título jornalístico de alta autoridade",
+      "excerpt": "Resumo impactante de 2 frases para SEO",
+      "content": "Texto completo e estruturado aqui...",
+      "imagePrompt": "A detailed, epic, photorealistic editorial photography description in ENGLISH for the article cover. Focus on technology, finance, high-end office, no people, cinematic lighting."
     }
     
-    Responda APENAS o JSON. Escreva em português do Brasil.
+    Responda APENAS o JSON em português do Brasil (exceto o imagePrompt que deve ser em inglês).
   `;
 
-  const res = await model.generateContent(articlePrompt);
+  // Chamada ao Gemini para gerar o conteúdo
+  const res = await getGeminiModel().generateContent(articlePrompt);
   const responseText = res.response.text().replace(/```json|```/g, "").trim();
   
   let articleData;
   try {
     articleData = JSON.parse(responseText);
-  } catch (e) {
+  } catch {
+    // Fallback caso a IA falhe na formatação JSON
     console.error("Falha ao parsear JSON do Gemini", responseText);
     articleData = {
       title: "Impacto no Mercado: " + baseTopic,
       excerpt: "Análise profunda sobre " + baseTopic,
-      content: "## Análise M4\n\nConteúdo gerado com fallback devido a formatação da IA."
+      content: "## Análise M4\n\nConteúdo gerado com fallback devido a formatação da IA.",
+      imagePrompt: "modern high-tech office interior, cinematic lighting, 8k"
     };
   }
 
-  // 3. FINALIZAÇÃO E VALIDAÇÃO DE IMAGEM
+  // 3. FINALIZAÇÃO E GERAÇÃO DA IMAGEM DINÂMICA
+  // Usamos o prompt gerado pela IA para criar uma imagem única via Pollinations API
   const fullContent = articleData.content;
   const cleanTitle = capitalize(cleanText(articleData.title));
   const cleanExcerpt = cleanText(articleData.excerpt);
   const slug = `${slugify(cleanTitle)}-${Date.now()}`;
+  
+  // Codifica o prompt de imagem para a URL
+  const encodedImgPrompt = encodeURIComponent(`${articleData.imagePrompt}, high-end photorealistic editorial photography, cinematic lighting, ultra detailed, 8k`);
+  const seed = Math.floor(Math.random() * 999999);
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodedImgPrompt}?width=1400&height=800&nologo=true&seed=${seed}`;
 
   return {
     slug,
@@ -165,13 +174,14 @@ export async function generateEditorialDraft(input: {
     excerpt: cleanExcerpt,
     content: fullContent,
     category: category.slug,
-    imageUrl: realisticImages[category.slug] || realisticImages["mercado-financeiro"],
+    imageUrl, // Imagem agora é contextual e inteligente
+    imagePrompt: `${articleData.imagePrompt}, high-end photorealistic editorial photography, cinematic lighting, ultra detailed, 8k`,
     status: "review" as const,
     author: "Marcus Caprini",
     tags: [category.shortName, "IA", "Mercado Premium"],
     priority: 50,
     scheduledAt: input.scheduledAt || null,
     isActive: true,
-    reviewerNotes: "Artigo revisado e validado para publicacao imediata."
+    reviewerNotes: "Artigo reconstruído com IA avançada e perfil visual dinâmico."
   };
 }

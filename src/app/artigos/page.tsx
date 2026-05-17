@@ -63,7 +63,7 @@ export default async function TodosOsArtigosPage({ searchParams }: Props) {
         }}>
           <div className="container">
             <span className={styles.eyebrow}>Acervo Editorial</span>
-            <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.2rem, 5vw, 4rem)", lineHeight: 1.05, letterSpacing: "-0.05em", marginTop: 12, marginBottom: 16 }}>
+            <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.2rem, 5vw, 4rem)", lineHeight: 1.05, letterSpacing: 0, marginTop: 12, marginBottom: 16 }}>
               Todos os Artigos
             </h1>
             <p style={{ color: "var(--muted)", fontSize: "1.1rem", maxWidth: 560 }}>
@@ -144,9 +144,16 @@ export default async function TodosOsArtigosPage({ searchParams }: Props) {
         {/* Grade de artigos */}
         <div className="container" style={{ paddingTop: 48, paddingBottom: 80 }}>
           {posts.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "80px 0" }}>
-              <p style={{ color: "var(--muted)", fontSize: "1.1rem" }}>Nenhum artigo encontrado nesta categoria.</p>
-              <Link href="/artigos" className="button" style={{ marginTop: 24, display: "inline-block" }}>Ver todos os artigos</Link>
+            <div className={styles.emptyArchive}>
+              <span className={styles.eyebrow}>Em breve</span>
+              <h2>O acervo editorial esta sendo montado.</h2>
+              <p>Quando os artigos forem publicados, esta pagina vai funcionar como um mapa de leitura por categoria.</p>
+              <div className={styles.emptyPathPreview}>
+                {categories.slice(0, 5).map((cat) => (
+                  <span key={cat.slug} style={{ ["--accent" as string]: cat.accent }}>{cat.shortName}</span>
+                ))}
+              </div>
+              <Link href="/admin" className="button" style={{ marginTop: 24, display: "inline-block" }}>Acessar editorial</Link>
             </div>
           ) : (
             <div className={styles.postGrid}>

@@ -1,9 +1,10 @@
 import requests
 import json
+import os
 
-url = 'http://2.24.221.50:11434/api/generate'
+url = os.environ.get("OLLAMA_TEST_URL", "http://localhost:11434/api/generate")
 data = {
-    "model": "gpt-oss",
+    "model": os.environ.get("OLLAMA_TEST_MODEL", "llama3.1"),
     "prompt": "oi",
     "stream": False
 }

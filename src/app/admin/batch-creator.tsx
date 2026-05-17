@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createSingleDraftAction } from "./actions";
+import { createEditorialBatchAction } from "./actions";
 import styles from "../portal.module.css";
 
 export function BatchCreator() {
@@ -12,61 +12,32 @@ export function BatchCreator() {
   async function handleBatchCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const topic = formData.get("topic") as string;
     const count = Number(formData.get("count") ?? 1);
-
-    // Variações de ângulo editorial para garantir títulos únicos em lote
-    const ANGLE_VARIANTS = [
-      "",                                      // 1º artigo: tópico puro
-      "— Perspectivas e Tendências 2026",
-      "— Impacto no Mercado Financeiro Brasileiro",
-      "— Oportunidades Práticas para Investidores",
-      "— O Que os Especialistas Estão Dizendo",
-      "— Análise Aprofundada e Cenários Futuros",
-      "— Guia Completo Para Profissionais",
-      "— Riscos, Oportunidades e Decisões Estratégicas",
-      "— Como Preparar Sua Carteira Para Esta Realidade",
-      "— Lições do Mercado Global Para o Brasil",
-    ];
 
     setLoading(true);
     setTotal(count);
     setProgress(0);
 
-    for (let i = 1; i <= count; i++) {
-      setProgress(i);
+    try {
+      setProgress(Math.max(1, Math.ceil(count / 2)));
+      const result = await createEditorialBatchAction(formData);
+      setProgress(count);
 
-      // Cada artigo recebe uma variação de ângulo para garantir unicidade
-      const angle = ANGLE_VARIANTS[(i - 1) % ANGLE_VARIANTS.length];
-      const variantTopic = angle ? `${topic} ${angle}` : topic;
-
-      const singleFormData = new FormData();
-      singleFormData.append("topic", variantTopic);
-      singleFormData.append("index", String(i));
-      singleFormData.append("total", String(count));
-
-      try {
-        const result = await createSingleDraftAction(singleFormData);
-
-        if (result && !result.success) {
-          // Traduz o erro de duplicata para português
-          const errorMsg = result.error?.includes("duplicate key") || result.error?.includes("CURADORIA")
-            ? `Artigo ${i}: Já existe um artigo com tema muito similar na base. Tente um ângulo diferente ou tema mais específico.`
-            : `Erro no Artigo ${i}:\n${result.error}`;
-          alert(errorMsg);
-          setLoading(false);
-          return;
-        }
-
-        // Pausa inteligente entre artigos para não sobrecarregar
-        if (i < count) {
-          await new Promise(resolve => setTimeout(resolve, 3000));
-        }
-      } catch (err: any) {
-        alert("Erro ao conectar com o servidor: " + err.message);
+      if (!result.success) {
+        alert(result.error || "Nenhuma pauta foi criada. Tente um tema mais específico.");
         setLoading(false);
         return;
       }
+
+      if (result.error) {
+        alert(`Foram criadas ${result.created} pautas. Algumas foram bloqueadas pela curadoria:\n\n${result.error}`);
+      } else if ((result.pending ?? 0) > 0) {
+        alert(`Produção sequencial ativada: 1 artigo entrou na fila agora e ${result.pending ?? 0} serão criados um por um após publicação.`);
+      }
+    } catch (err: any) {
+      alert("Erro ao conectar com o servidor: " + err.message);
+      setLoading(false);
+      return;
     }
 
     setLoading(false);
@@ -102,7 +73,7 @@ export function BatchCreator() {
               Produção em Lote Ativada ({progress}/{total})
             </span>
             <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
-              ~10 a 15 segundos por artigo...
+              Curadoria premium em lote...
             </span>
           </div>
           <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
@@ -114,7 +85,7 @@ export function BatchCreator() {
             }} />
           </div>
           <p style={{ fontSize: '0.75rem', color: 'var(--muted)', margin: '8px 0 0 0', fontStyle: 'italic' }}>
-            A IA está estruturando o texto, realizando revisão ortográfica e validando a imagem do artigo {progress}. Por favor, aguarde.
+            O servidor está criando pautas com ângulos diferentes, trava anti-duplicidade e direção visual própria.
           </p>
         </div>
       )}

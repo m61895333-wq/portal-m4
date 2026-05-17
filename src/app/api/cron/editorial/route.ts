@@ -1,24 +1,27 @@
 import { NextResponse } from "next/server";
-import { getAutonomyStatus, getPerformance, listPosts, createDraft } from "@/lib/portal-cms";
+import { createQueuedPost, getAutonomyStatus, getPerformance, listPosts, publishDueScheduledPosts } from "@/lib/portal-cms";
 
 /**
  * API CRON: Despertador Editorial M4
  * Este endpoint e chamado pela Vercel para processar a autonomia total.
  */
 export async function GET(request: Request) {
-  // 1. Verificacao de Seguranca (Opcional: usar Header de Autorizacao da Vercel)
   const authHeader = request.headers.get("authorization");
+  const cronSecret = process.env.CRON_SECRET;
   
-  // Em producao, verificamos o CRON_SECRET
-  // if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-  //   return new Response("Unauthorized", { status: 401 });
-  // }
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    return new Response("Unauthorized", { status: 401 });
+  }
 
   try {
+    const publication = await publishDueScheduledPosts();
     const autonomy = await getAutonomyStatus();
     
     if (!autonomy.active) {
-      return NextResponse.json({ message: "Agente de Autonomia esta DESLIGADO." });
+      return NextResponse.json({
+        message: "Agente de Autonomia esta DESLIGADO.",
+        publication
+      });
     }
 
     // REGRA MARCO: Verificar se ja existe algo na fila (foco total)
@@ -26,7 +29,10 @@ export async function GET(request: Request) {
     const activeTasks = currentQueue.filter(p => p.status === 'queued' || p.status === 'generating');
     
     if (activeTasks.length > 0) {
-      return NextResponse.json({ message: "Agente aguardando a finalizacao da fila atual para respeitar o foco total." });
+      return NextResponse.json({
+        message: "Agente aguardando a finalizacao da fila atual para respeitar o foco total.",
+        publication
+      });
     }
 
     // 2. Decisao de Pauta (Impacto vs Fallback)
@@ -40,17 +46,22 @@ export async function GET(request: Request) {
       targetTopic = cats[Math.floor(Math.random() * cats.length)];
     }
 
-    // 3. Disparo da Geracao Sequencial Premium do Artigo do Dia
-    console.log(`[CRON] Disparando o Artigo Epico do Dia para: ${targetTopic}`);
+    // 3. Disparo oficial: cria fila para o worker da VPS processar sem timeout da Vercel.
+    console.log(`[CRON] Enfileirando Artigo Epico do Dia para: ${targetTopic}`);
     
-    await createDraft({
+    const post = await createQueuedPost({
       topic: targetTopic,
-      approach: "Artigo Epico de Capa. Foco em autoridade maxima e profundidade total para abertura do dia editorial."
+      sourceTopic: targetTopic,
+      editorialAngle: "capa estrategica do dia com decisao pratica para o leitor brasileiro",
+      audience: "leitor brasileiro amplo, de diferentes classes sociais, que busca uma leitura premium e aplicavel",
+      visualDirection: "premium homepage cover, Brazilian finance and technology context, refined editorial photography, no text, no identifiable people"
     });
 
     return NextResponse.json({ 
-      message: "Artigo do Dia gerado com sucesso!", 
-      topic: targetTopic
+      message: "Artigo do Dia enfileirado com sucesso.", 
+      topic: targetTopic,
+      id: post.id,
+      publication
     });
 
   } catch (error) {

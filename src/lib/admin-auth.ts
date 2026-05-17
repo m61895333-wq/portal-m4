@@ -10,8 +10,13 @@ export async function isAdminAuthenticated() {
 export async function signInAdmin(formData: FormData) {
   const user = String(formData.get("user") ?? "");
   const password = String(formData.get("password") ?? "");
-  const expectedUser = process.env.PORTAL_M4_ADMIN_USER ?? "admin";
-  const expectedPassword = process.env.PORTAL_M4_ADMIN_PASSWORD ?? "m4-2026";
+  const expectedUser = process.env.PORTAL_M4_ADMIN_USER;
+  const expectedPassword = process.env.PORTAL_M4_ADMIN_PASSWORD;
+
+  if (!expectedUser || !expectedPassword) {
+    console.error("Credenciais do painel admin nao configuradas.");
+    return false;
+  }
 
   if (user !== expectedUser || password !== expectedPassword) {
     return false;

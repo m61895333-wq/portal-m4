@@ -11,3 +11,13 @@ dist
 coverage
 
 .vercel
+*.tsbuildinfo
+*.b64
+*.tar.gz
+*.pem
+*_key
+*_key.pub
+scripts/antigravity_key
+scripts/antigravity_key.pub
+scripts/local/
+scripts/archive/
