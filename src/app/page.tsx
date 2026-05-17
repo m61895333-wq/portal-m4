@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { categories, categoryName } from "@/lib/categories";
 import { listPublicPosts } from "@/lib/portal-cms";
+import { Header, Footer } from "./site-shell";
 import styles from "./portal.module.css";
 
 // Artigos de demonstração de altíssima qualidade para preencher o design caso o banco esteja vazio
@@ -108,24 +109,8 @@ export default async function HomePage() {
 
   return (
     <div className={styles.cleanTheme}>
-      {/* 1. TOP NAVBAR MINIMALISTA */}
-      <header className={styles.cleanNavbar}>
-        <div className={styles.cleanThemeContainer}>
-          <div className={styles.cleanNavbarInner}>
-            <Link href="/" className={styles.cleanBrand}>
-              <img src="/portal-m4-brand-logo.png" alt="Logo Portal M4" />
-              <span>Portal M4</span>
-            </Link>
-            <nav className={styles.cleanNavLinks}>
-              <Link href="/" className={`${styles.cleanNavLink} ${styles.cleanNavActive}`}>Home</Link>
-              <Link href="/artigos" className={styles.cleanNavLink}>Todos os Artigos</Link>
-              <Link href="/sobre" className={styles.cleanNavLink}>Sobre</Link>
-              <Link href="/contato" className={styles.cleanNavLink}>Contato</Link>
-            </nav>
-            <Link href="/admin" className={styles.cleanSubscribeBtn}>Painel Editorial</Link>
-          </div>
-        </div>
-      </header>
+      {/* 1. TOP NAVBAR MINIMALISTA COMPARTILHADA */}
+      <Header />
 
       {/* 2. CATEGORY PILL STRIP */}
       <div className={styles.cleanCategoryStrip}>
@@ -335,52 +320,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 5. RODAPÉ DE ALTA GAMA */}
-      <footer className={styles.cleanFooter}>
-        <div className={styles.cleanThemeContainer}>
-          <div className={styles.cleanFooterGrid}>
-            
-            <div className={styles.cleanFooterCol}>
-              <div className={styles.cleanBrand} style={{ marginBottom: 8 }}>
-                <img src="/portal-m4-brand-logo.png" alt="Logo Portal M4" />
-                <span>Portal M4</span>
-              </div>
-              <p>Análises premium e contextuais sobre mercado financeiro, investimentos, tecnologia e carreira na era digital.</p>
-              <p style={{ fontSize: "0.8rem", color: "#94a3b8", marginTop: 12 }}>© 2026 Grupo M4. Todos os direitos reservados.</p>
-            </div>
-
-            <div className={styles.cleanFooterCol}>
-              <strong>Navegação</strong>
-              <Link href="/" className={styles.cleanFooterLink}>Home</Link>
-              <Link href="/artigos" className={styles.cleanFooterLink}>Todos os Artigos</Link>
-              <Link href="/sobre" className={styles.cleanFooterLink}>Sobre o Portal</Link>
-              <Link href="/contato" className={styles.cleanFooterLink}>Fale Conosco</Link>
-            </div>
-
-            <div className={styles.cleanFooterCol}>
-              <strong>Editorias</strong>
-              {categories.map((category) => (
-                <Link 
-                  key={category.slug} 
-                  href={`/artigos?categoria=${category.slug}`} 
-                  className={styles.cleanFooterLink}
-                >
-                  {category.name}
-                </Link>
-              ))}
-            </div>
-
-            <div className={styles.cleanFooterCol}>
-              <strong>Ecossistema M4</strong>
-              <Link href="https://salex.com.br" className={styles.cleanFooterLink} target="_blank">Salex AI</Link>
-              <Link href="https://m4games.com.br" className={styles.cleanFooterLink} target="_blank">M4 Games</Link>
-              <Link href="https://grupom4.com" className={styles.cleanFooterLink} target="_blank">Grupo M4</Link>
-              <Link href="/admin" className={styles.cleanFooterLink} style={{ color: "#2563eb", fontWeight: 700 }}>Acesso Editorial</Link>
-            </div>
-
-          </div>
-        </div>
-      </footer>
+      {/* 5. RODAPÉ DE ALTA GAMA COMPARTILHADO */}
+      <Footer />
     </div>
   );
 }
