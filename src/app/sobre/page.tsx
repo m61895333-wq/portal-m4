@@ -12,7 +12,7 @@ export default function AboutPage() {
             <span className="badge" style={{ marginBottom: 16 }}>Institucional</span>
             <h1 style={{ marginBottom: 32 }}>Sobre o Portal M4: A Inteligencia da Nova Economia</h1>
             
-            <p style={{ fontSize: '1.4rem', color: 'white', fontWeight: 600, lineHeight: 1.5, marginBottom: 40 }}>
+            <p style={{ fontSize: '1.4rem', color: 'var(--text)', fontWeight: 600, lineHeight: 1.5, marginBottom: 40 }}>
               O Portal M4 e a divisao de inteligencia editorial do Grupo M4, nascida para decodificar a complexidade dos investimentos, da tecnologia e da inteligencia artificial.
             </p>
 

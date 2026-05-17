@@ -58,7 +58,7 @@ export default async function TodosOsArtigosPage({ searchParams }: Props) {
         {/* Banner da seção */}
         <section style={{
           padding: "72px 0 48px",
-          background: "linear-gradient(135deg, rgba(8,13,33,0.6), rgba(8,13,33,0.95)), radial-gradient(circle at 60% 30%, rgba(32,217,255,0.12), transparent 40%)",
+          background: "#ffffff",
           borderBottom: "1px solid var(--line)"
         }}>
           <div className="container">
@@ -73,7 +73,7 @@ export default async function TodosOsArtigosPage({ searchParams }: Props) {
         </section>
 
         {/* Filtros por categoria */}
-        <div style={{ borderBottom: "1px solid var(--line)", background: "rgba(255,255,255,0.02)" }}>
+        <div style={{ borderBottom: "1px solid var(--line)", background: "#ffffff" }}>
           <div className="container" style={{ paddingTop: 0, paddingBottom: 0 }}>
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", padding: "16px 0", alignItems: "center" }}>
               <span style={{ fontSize: "0.75rem", color: "var(--muted)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginRight: 8 }}>
@@ -87,8 +87,8 @@ export default async function TodosOsArtigosPage({ searchParams }: Props) {
                   fontSize: "0.8rem",
                   fontWeight: 700,
                   border: "1px solid",
-                  borderColor: !categoria ? "var(--cyan)" : "rgba(255,255,255,0.15)",
-                  background: !categoria ? "rgba(32,217,255,0.12)" : "transparent",
+                  borderColor: !categoria ? "var(--cyan)" : "rgba(15,23,42,0.12)",
+                  background: !categoria ? "rgba(37,99,235,0.08)" : "transparent",
                   color: !categoria ? "var(--cyan)" : "var(--muted)",
                   textDecoration: "none",
                   whiteSpace: "nowrap"
@@ -125,8 +125,8 @@ export default async function TodosOsArtigosPage({ searchParams }: Props) {
                       fontSize: "0.8rem",
                       fontWeight: 700,
                       border: "1px solid",
-                      borderColor: isActive ? cat.accent : "rgba(255,255,255,0.15)",
-                      background: isActive ? `${cat.accent}20` : "transparent",
+                      borderColor: isActive ? cat.accent : "rgba(15,23,42,0.12)",
+                      background: isActive ? `${cat.accent}12` : "transparent",
                       color: isActive ? cat.accent : "var(--muted)",
                       textDecoration: "none",
                       whiteSpace: "nowrap",
@@ -216,8 +216,8 @@ export default async function TodosOsArtigosPage({ searchParams }: Props) {
                       padding: "10px 18px",
                       borderRadius: "12px",
                       border: "1px solid",
-                      borderColor: page === currentPage ? "var(--cyan)" : "rgba(255,255,255,0.15)",
-                      background: page === currentPage ? "rgba(32,217,255,0.15)" : "transparent",
+                      borderColor: page === currentPage ? "var(--cyan)" : "rgba(15,23,42,0.12)",
+                      background: page === currentPage ? "rgba(37,99,235,0.08)" : "transparent",
                       color: page === currentPage ? "var(--cyan)" : "var(--muted)",
                       fontWeight: page === currentPage ? 900 : 400,
                       textDecoration: "none",

@@ -43,10 +43,10 @@ export function ContactForm() {
           style={{ 
             width: '100%', 
             padding: '14px', 
-            background: 'rgba(255,255,255,0.03)', 
+            background: '#ffffff', 
             border: '1px solid var(--line)', 
             borderRadius: 12,
-            color: 'white'
+            color: 'var(--text)'
           }} 
         />
       </div>
@@ -63,10 +63,10 @@ export function ContactForm() {
           style={{ 
             width: '100%', 
             padding: '14px', 
-            background: 'rgba(255,255,255,0.03)', 
+            background: '#ffffff', 
             border: '1px solid var(--line)', 
             borderRadius: 12,
-            color: 'white'
+            color: 'var(--text)'
           }} 
         />
       </div>
@@ -83,10 +83,10 @@ export function ContactForm() {
           style={{ 
             width: '100%', 
             padding: '14px', 
-            background: 'rgba(255,255,255,0.03)', 
+            background: '#ffffff', 
             border: '1px solid var(--line)', 
             borderRadius: 12,
-            color: 'white',
+            color: 'var(--text)',
             resize: 'none'
           }} 
         ></textarea>

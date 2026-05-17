@@ -307,14 +307,13 @@
 }
 
 .postCard {
-  background:
-    linear-gradient(180deg, rgba(12, 18, 38, 0.94), rgba(5, 8, 18, 0.98));
+  background: transparent;
 }
 
 .categoryCard:hover,
 .postCard:hover {
   transform: translateY(-6px);
-  border-color: rgba(32, 217, 255, 0.58);
+  border-color: var(--cyan);
 }
 
 .categoryCard {

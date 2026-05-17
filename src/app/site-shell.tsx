@@ -2,109 +2,96 @@ import Link from "next/link";
 import { categories } from "@/lib/categories";
 import { getPerformance } from "@/lib/portal-cms";
 import { MobileMenuTrigger } from "./mobile-nav";
+import styles from "./portal.module.css";
 
 /**
  * Sidebar (Menu Lateral)
  * Apresenta a marca, as categorias de navegação (Editorias) e o Contador de Impacto Global.
- * O contador de acessos lê o `absoluteTotal` do banco de dados de visualizações globais.
+ * Desativado globalmente para suportar a visualização horizontal limpa de alta gama em todo o site.
  */
 export async function Sidebar() {
-  const perf = await getPerformance("month");
-  
-  return (
-    <aside className="sidebar" style={{ width: '260px', minWidth: '260px', maxWidth: '260px' }}>
-      <Link href="/" className="brand" aria-label="Portal M4" style={{ padding: '32px 24px' }}>
-        <img src="/portal-m4-brand-logo.png" alt="Logo Portal M4" />
-        <span>Portal M4</span>
-      </Link>
-
-      <nav className="sidebarMenu" style={{ marginTop: '20px', padding: '0 12px', flex: 1 }}>
-        <span style={{ display: 'block', fontSize: '0.65rem', fontWeight: 800, color: 'var(--muted)', letterSpacing: '0.1em', marginBottom: '16px', paddingLeft: '14px', textTransform: 'uppercase' }}>Editorias</span>
-        {categories.map((category) => (
-          <Link key={category.slug} href={`/categoria/${category.slug}`} className="sidebarLink" style={{ padding: '6px 14px' }}>
-            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: category.accent }} />
-            {category.name}
-          </Link>
-        ))}
-      </nav>
-
-      <div className="sidebarStats" style={{ padding: '32px 24px', borderTop: '1px solid var(--line)' }}>
-        <div className="statsCard" style={{ textAlign: 'center', display: 'block', opacity: 1 }}>
-          <span style={{ display: 'block', fontSize: '2.4rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{perf.absoluteTotal.toLocaleString('pt-BR')}</span>
-          <span style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--cyan)', letterSpacing: '0.1em', marginTop: '8px', textTransform: 'uppercase' }}>Acessos</span>
-        </div>
-      </div>
-    </aside>
-  );
+  return null;
 }
 
 /**
  * Header (Cabeçalho Superior)
- * Contém o menu principal (Home, Sobre, Contato) e o disparador do menu mobile.
+ * Renderiza o mesmo menu horizontal minimalista e de alta gama da página principal.
  */
 export async function Header() {
   const perf = await getPerformance("month");
 
   return (
-    <header className="header">
-      <nav className="container nav">
-        <Link href="/" className="headerBrand" aria-label="Portal M4">
-          <img src="/portal-m4-brand-logo.png" alt="" />
-          <span>Portal M4</span>
-        </Link>
-        <div className="menu" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <MobileMenuTrigger totalViews={perf.totalViews} />
-          <Link href="/" className="hideMobile">Home</Link>
-          <Link href="/artigos" className="hideMobile" style={{ color: 'var(--cyan)', fontWeight: 700 }}>Artigos</Link>
-          <Link href="/sobre" className="hideMobile">Sobre</Link>
-          <Link href="/contato" className="hideMobile">Contato</Link>
+    <header className={styles.cleanNavbar}>
+      <div className={styles.cleanThemeContainer}>
+        <div className={styles.cleanNavbarInner}>
+          <div className="showMobile" style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)" }}>
+            <MobileMenuTrigger totalViews={perf.totalViews} />
+          </div>
+          <Link href="/" className={styles.cleanBrand}>
+            <img src="/portal-m4-brand-logo.png" alt="Logo Portal M4" />
+            <span>Portal M4</span>
+          </Link>
+          <nav className={styles.cleanNavLinks}>
+            <Link href="/" className={styles.cleanNavLink}>Home</Link>
+            <Link href="/artigos" className={styles.cleanNavLink}>Todos os Artigos</Link>
+            <Link href="/sobre" className={styles.cleanNavLink}>Sobre</Link>
+            <Link href="/contato" className={styles.cleanNavLink}>Contato</Link>
+          </nav>
+          <Link href="/admin" className={styles.cleanSubscribeBtn}>Painel Editorial</Link>
         </div>
-        <Link href="/artigos" className="headerCta">
-          Explorar
-        </Link>
-      </nav>
+      </div>
     </header>
   );
 }
 
 /**
  * Footer (Rodapé)
- * Apresenta informações de marca, mapa do site e links do ecossistema do Grupo M4.
+ * Apresenta o mesmo rodapé de alta gama unificado da página principal.
  */
 export function Footer() {
   return (
-    <footer className="footer">
-      <div className="container footerGrid">
-        <div>
-          <div className="brand">
-            <img src="/portal-m4-brand-logo.png" alt="Logo Portal M4" />
-            <span>Portal M4</span>
+    <footer className={styles.cleanFooter}>
+      <div className={styles.cleanThemeContainer}>
+        <div className={styles.cleanFooterGrid}>
+          
+          <div className={styles.cleanFooterCol}>
+            <div className={styles.cleanBrand} style={{ marginBottom: 8 }}>
+              <img src="/portal-m4-brand-logo.png" alt="Logo Portal M4" />
+              <span>Portal M4</span>
+            </div>
+            <p>Análises premium e contextuais sobre mercado financeiro, investimentos, tecnologia e carreira na era digital.</p>
+            <p style={{ fontSize: "0.8rem", color: "#94a3b8", marginTop: 12 }}>© 2026 Grupo M4. Todos os direitos reservados.</p>
           </div>
-          <p>Conteudo premium do Grupo M4 sobre mercado, tecnologia, IA e negocios digitais.</p>
-          <p>Todos os direitos reservados.</p>
-        </div>
-        <div>
-          <strong>Navegação</strong>
-          <Link href="/">Home</Link>
-          <Link href="/artigos">Todos os Artigos</Link>
-          <Link href="/sobre">Sobre</Link>
-          <Link href="/contato">Contato</Link>
-        </div>
-        <div>
-          <strong>Categorias</strong>
-          {categories.map((category) => (
-            <Link key={category.slug} href={`/categoria/${category.slug}`}>
-              {category.name}
-            </Link>
-          ))}
-        </div>
-        <div>
-          <strong>Grupo M4</strong>
-          <Link href="https://salex.com.br">Salex AI</Link>
-          <Link href="https://m4games.com.br">M4 Games</Link>
-          <Link href="https://grupom4.com">Grupo M4</Link>
-          <Link href="mailto:contato@portalm4.com.br">contato@portalm4.com.br</Link>
-          <Link href="mailto:admin@portalm4.com.br">admin@portalm4.com.br</Link>
+
+          <div className={styles.cleanFooterCol}>
+            <strong>Navegação</strong>
+            <Link href="/" className={styles.cleanFooterLink}>Home</Link>
+            <Link href="/artigos" className={styles.cleanFooterLink}>Todos os Artigos</Link>
+            <Link href="/sobre" className={styles.cleanFooterLink}>Sobre o Portal</Link>
+            <Link href="/contato" className={styles.cleanFooterLink}>Fale Conosco</Link>
+          </div>
+
+          <div className={styles.cleanFooterCol}>
+            <strong>Editorias</strong>
+            {categories.map((category) => (
+              <Link 
+                key={category.slug} 
+                href={`/artigos?categoria=${category.slug}`} 
+                className={styles.cleanFooterLink}
+              >
+                {category.name}
+              </Link>
+            ))}
+          </div>
+
+          <div className={styles.cleanFooterCol}>
+            <strong>Ecossistema M4</strong>
+            <Link href="https://salex.com.br" className={styles.cleanFooterLink} target="_blank">Salex AI</Link>
+            <Link href="https://m4games.com.br" className={styles.cleanFooterLink} target="_blank">M4 Games</Link>
+            <Link href="https://grupom4.com" className={styles.cleanFooterLink} target="_blank">Grupo M4</Link>
+            <Link href="/admin" className={styles.cleanFooterLink} style={{ color: "#2563eb", fontWeight: 700 }}>Acesso Editorial</Link>
+          </div>
+
         </div>
       </div>
     </footer>
